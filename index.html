@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Программа тренировок</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E6E4DE; --surface:#F4F3EF; --ink:#1F2429; --muted:#5E6468; --line:#C9C6BE;
+  --red:#C8322B; --blue:#2D5DA8; --yellow:#E2AC1B; --green:#2F8A4C; --on-plate:#fff;
+  --display:"Unbounded", "Arial Black", system-ui, sans-serif;
+  --body:"Golos Text", "Segoe UI", system-ui, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1A1D20; --surface:#24282C; --ink:#EDEBE6; --muted:#A2A6A9; --line:#3A3F44;
+    --red:#E0493F; --blue:#5B8BD8; --yellow:#F0BE3A; --green:#45A864;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1A1D20; --surface:#24282C; --ink:#EDEBE6; --muted:#A2A6A9; --line:#3A3F44;
+  --red:#E0493F; --blue:#5B8BD8; --yellow:#F0BE3A; --green:#45A864;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;max-width:900px;margin:0 auto}
+.brand{font-family:var(--display);font-weight:700;font-size:15px;background:none;border:0;padding:0;letter-spacing:.01em}
+.hist-btn{border:2px solid var(--ink);background:transparent;border-radius:999px;padding:8px 16px;font-weight:600;font-size:15px}
+.hist-btn:hover{background:var(--ink);color:var(--bg)}
+
+main{max-width:900px;margin:0 auto;padding:12px 20px 110px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,7vw,64px);line-height:1.02;margin:24px 0 16px;letter-spacing:-.01em}
+h2{font-family:var(--display);font-weight:700;font-size:clamp(24px,4.5vw,34px);line-height:1.1;margin:8px 0 20px}
+.lead{color:var(--muted);max-width:56ch;margin:0 0 32px}
+.back{background:none;border:0;padding:6px 0;color:var(--muted);font-weight:500}
+.back:hover{color:var(--ink)}
+.screen{display:none}
+.screen.on{display:block;animation:in .25s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.screen.on{animation:none}}
+
+.ask{background:var(--surface);border:2px solid var(--ink);border-radius:18px;padding:24px;max-width:560px}
+.ask p{font-family:var(--display);font-weight:700;font-size:22px;margin:0 0 18px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:14px 26px;font-weight:600;font-size:17px;background:var(--ink);color:var(--bg)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink)}
+.btn:hover{filter:brightness(1.15)}
+
+/* warmup table */
+.tbl-wrap{overflow-x:auto;margin:0 0 28px}
+table{border-collapse:collapse;width:100%;min-width:420px;background:var(--surface);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:14px}
+.empty{background:var(--surface);border:2px dashed var(--line);border-radius:12px;padding:24px;color:var(--muted);margin-bottom:28px}
+
+.praise{font-family:var(--display);font-weight:800;font-size:clamp(56px,14vw,120px);line-height:1;margin:40px 0 12px;color:var(--green)}
+
+/* mode choice */
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.mode{text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:24px;min-height:170px;display:flex;flex-direction:column;justify-content:space-between}
+.mode:hover{border-color:var(--ink)}
+.mode b{font-family:var(--display);font-size:28px;font-weight:700}
+.mode span{color:var(--muted)}
+
+/* plates */
+.plates{display:flex;gap:clamp(12px,3vw,28px);flex-wrap:wrap;align-items:flex-end}
+.plate{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:12px}
+.disc{border-radius:50%;display:grid;place-items:center;color:var(--on-plate);font-family:var(--display);font-weight:800;position:relative;
+  box-shadow:inset 0 0 0 8px rgba(0,0,0,.14), inset 0 0 0 16px rgba(255,255,255,.08);transition:transform .15s}
+.disc::after{content:"";position:absolute;width:18%;height:18%;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 3px rgba(0,0,0,.25)}
+.disc em{font-style:normal;position:absolute;top:22%;font-size:clamp(14px,2.6vw,20px)}
+.plate:hover .disc{transform:rotate(-12deg)}
+.plate .name{font-weight:600;font-size:18px}
+.plate .sub{color:var(--muted);font-size:14px;margin-top:-10px}
+.d1{width:clamp(120px,24vw,160px);height:clamp(120px,24vw,160px);background:var(--green)}
+.d2{width:clamp(140px,28vw,190px);height:clamp(140px,28vw,190px);background:var(--yellow)}
+.d3{width:clamp(160px,32vw,220px);height:clamp(160px,32vw,220px);background:var(--red)}
+
+/* groups */
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.group{text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:18px 20px}
+.group:hover:not(:disabled){border-color:var(--ink)}
+.group b{display:block;font-size:20px;font-weight:600}
+.group span{color:var(--muted);font-size:14px}
+.group:disabled{opacity:.5;cursor:not-allowed}
+
+/* workout */
+.tag-level{display:inline-block;border-radius:999px;padding:4px 12px;font-size:14px;font-weight:600;color:var(--on-plate)}
+.ex{list-style:none;margin:0;padding:0;counter-reset:ex}
+.ex > li{counter-increment:ex;display:grid;grid-template-columns:44px 1fr auto;gap:4px 14px;align-items:start;padding:18px 0;border-bottom:1px solid var(--line)}
+.ex > li::before{content:counter(ex);font-family:var(--display);font-weight:800;font-size:26px;line-height:1.1;color:var(--muted);grid-row:span 2}
+.ex .nm{font-weight:600;font-size:18px;line-height:1.3}
+.ex .sr{font-family:var(--display);font-weight:700;font-size:20px;white-space:nowrap;text-align:right}
+.ex .meta{grid-column:2 / 4;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.int{font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;border:1.5px solid currentColor}
+.int.light{color:var(--green)} .int.mid{color:var(--blue)} .int.heavy{color:var(--red)} .int.drop{color:var(--ink);background:var(--yellow);border-color:var(--yellow);color:#1F2429}
+.sets{display:flex;gap:6px;flex-wrap:wrap}
+.set{width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);background:transparent;padding:0;font-size:12px;font-weight:600}
+.set.done{background:var(--ink);color:var(--bg)}
+.done-li .nm{text-decoration:line-through;color:var(--muted)}
+.finish{margin-top:28px}
+.progress{color:var(--muted);margin:0 0 8px}
+
+/* history drawer */
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(380px,100%);background:var(--surface);border-left:2px solid var(--ink);
+  padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(105%);transition:transform .25s;z-index:20;overflow-y:auto}
+.drawer.open{transform:none}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+.drawer h3{font-family:var(--display);font-size:20px;margin:0 0 16px}
+.drawer ul{list-style:none;padding:0;margin:0}
+.drawer li{padding:12px 0;border-bottom:1px solid var(--line)}
+.drawer li b{display:block}
+.drawer li span{color:var(--muted);font-size:14px}
+.drawer .x{position:absolute;right:16px;top:calc(14px + env(safe-area-inset-top,0px));background:none;border:0;font-size:26px;line-height:1}
+.shade{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:15;display:none}
+.shade.open{display:block}
+
+.author{position:fixed;left:0;bottom:0;padding:10px 20px calc(10px + env(safe-area-inset-bottom,0px));font-size:13px;color:var(--muted);background:var(--bg);border-top-right-radius:12px;z-index:5}
+.author b{color:var(--ink);font-weight:600}
+.author-q{background:none;border:0;padding:0 0 4px;color:var(--blue);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.author-pop{position:absolute;left:12px;bottom:calc(100% + 8px);width:min(340px,calc(100vw - 24px));background:var(--surface);border:2px solid var(--ink);border-radius:14px;padding:18px;color:var(--ink);font-size:15px}
+.author-pop[hidden]{display:none}
+.ap-h{font-family:var(--display);font-weight:700;font-size:16px;margin:0 0 10px}
+.author-pop ol{margin:0 0 14px;padding-left:20px}
+.author-pop li{padding:4px 0}
+.author-pop li span{color:var(--muted);white-space:nowrap}
+.author-pop .btn{padding:10px 18px;font-size:15px}
+
+.top-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:6px 12px;font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.w-note{color:var(--muted);font-size:14px;margin:-16px 0 20px}
+td.num{font-family:var(--display);font-weight:700;color:var(--muted);width:44px}
+td .cue{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+td .warn{display:block;color:var(--red);font-size:14px;margin-top:2px}
+.h-count{color:var(--muted);font-size:14px;margin:-8px 0 8px}
+.reset{margin-top:24px}
+.reset p{margin:0 0 12px;font-weight:600}
+.btn.danger{color:var(--red);box-shadow:inset 0 0 0 2px var(--red)}
+.btn.danger-fill{background:var(--red);color:#fff}
+[hidden]{display:none !important}
+.exfig{width:100%;height:auto;display:block;background:#fbfbf9;border-radius:12px}
+.exfig .skin{fill:url(#gSkin);stroke:#7c858d;stroke-width:1.1;stroke-linejoin:round}
+.exfig .skin.far{fill:url(#gFar);stroke:#89929a}
+.exfig .shoe{fill:#3c434a;stroke:#2a2f34;stroke-width:1}
+.exfig .shoe.far{fill:#5a626a}
+.exfig .sole{stroke:#e8b62c;stroke-width:1.6;fill:none;stroke-linecap:round}
+.exfig .hair{fill:#6f777e}
+.exfig .ear{fill:#d3d8dc;stroke:#7c858d;stroke-width:.9}
+.exfig .cont{fill:none;stroke:#8e979e;stroke-width:.9;stroke-linecap:round;opacity:.7}
+.exfig .mus{fill:url(#gMus);stroke:#9e2219;stroke-width:.8}
+.exfig .fib{stroke:#f4a49d;stroke-width:.9;opacity:.7;fill:none;stroke-linecap:round}
+.exfig .frame{fill:url(#gFrame);stroke:#8b939a;stroke-width:1}
+.exfig .pad{fill:#353b41;stroke:#1f2428;stroke-width:1}
+.exfig .pad-hi{stroke:#59616a;stroke-width:1.4;fill:none;stroke-linecap:round}
+.exfig .pad-hi2{fill:none;stroke:#59616a;stroke-width:1.2}
+.exfig .steel{stroke:#7d858c;fill:none;stroke-linecap:round}
+.exfig .steel-f{fill:#a9b0b6;stroke:#6c747b;stroke-width:.9}
+.exfig .plate{fill:#23282d;stroke:#15191c;stroke-width:1}
+.exfig .plate-ring{fill:none;stroke:#4c545b;stroke-width:1.6}
+.exfig .rubber{fill:#2b3035}
+.exfig .cable{stroke:#2b3035;stroke-width:1.4}
+.exfig .floor{stroke:#b9bec2;stroke-width:1.5}
+.exfig .shadow{fill:#000;opacity:.07}
+.exfig .arrow path{fill:none;stroke:#9aa1a7;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.exfig .num circle{fill:#2b3035}
+.exfig .num text{fill:#fff;font:700 13px system-ui,sans-serif;text-anchor:middle}
+.exfig .shorts{fill:#4a5561;stroke:#343c45;stroke-width:1}
+.exfig .shorts.far{fill:#5d6874}
+.exfig .band{stroke:#2e353d;stroke-width:2.2;stroke-linecap:round;fill:none}
+.exfig .eye{fill:#3f464c}
+.exfig .face{fill:none;stroke:#6f777e;stroke-width:.9;stroke-linecap:round}
+.exfig .hole{fill:#4c545b}
+.exfig .rod{stroke:#9aa1a7;stroke-width:1.4}
+.exfig .face.soft{stroke:#9aa2a9}
+
+.fig-box{margin:12px 0 0}
+.fig-box img{display:block;width:100%;max-width:420px;height:auto;border-radius:12px;margin:0 auto;background:#fff}
+.mus-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 0;font-size:14px}
+.mus-chips span{color:var(--muted);font-weight:600}
+.mus-chips i{font-style:normal;background:#d23a2f;color:#fff;border-radius:999px;padding:2px 10px;font-weight:600;font-size:13px}
+.tech-btn{grid-column:2 / 4;justify-self:start;background:none;border:0;padding:4px 0;color:var(--blue);font-weight:600;font-size:15px;text-decoration:underline;text-underline-offset:3px}
+.tech{grid-column:1 / 4;background:var(--surface);border-radius:14px;padding:16px;margin-top:6px}
+.tech img{display:block;width:100%;max-width:420px;height:auto;border-radius:10px;margin:0 auto 12px;background:#fff}
+.tech ul{margin:0;padding-left:20px}
+.tech ul li{padding:3px 0}
+@media (max-width:560px){.brand{font-size:13px}.hist-btn{padding:6px 12px;font-size:14px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="brand" id="home" data-i18n="brand"></button>
+  <div class="top-r">
+    <div class="seg" role="group" aria-label="Язык / Language">
+      <button data-lang="ru">RU</button><button data-lang="en">EN</button>
+    </div>
+    <div class="seg" role="group" id="themeSeg">
+      <button data-theme-set="light" data-i18n="light"></button><button data-theme-set="dark" data-i18n="dark"></button>
+    </div>
+    <button class="hist-btn" id="histOpen" data-i18n="history"></button>
+  </div>
+</header>
+
+<main>
+  <section class="screen on" id="s-warm">
+    <h1 data-i18n="warmH"></h1>
+    <p class="lead" data-i18n="warmLead"></p>
+    <div class="ask">
+      <p data-i18n="warmQ"></p>
+      <div class="row">
+        <button class="btn" data-go="level" data-i18n="yes"></button>
+        <button class="btn ghost" data-go="warmtable" data-i18n="no"></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-warmtable">
+    <button class="back" data-go="warm" data-i18n="back"></button>
+    <h2 data-i18n="warmT"></h2>
+    <p class="w-note" data-i18n="warmNote"></p>
+    <div id="warmBox"></div>
+    <button class="btn" data-go="praise" data-i18n="warmDone"></button>
+  </section>
+
+  <section class="screen" id="s-praise">
+    <div class="praise" data-i18n="praise"></div>
+    <p class="lead" data-i18n="praiseLead"></p>
+    <button class="btn" data-go="level" data-i18n="toWorkout"></button>
+  </section>
+
+  <section class="screen" id="s-level">
+    <button class="back" data-go="warm" data-i18n="back"></button>
+    <h2 data-i18n="levelH"></h2>
+    <div class="plates">
+      <button class="plate" data-level="начальный"><span class="disc d1"><em>10</em></span><span class="name" data-i18n="lv_начальный"></span><span class="sub" data-i18n="lvs1"></span></button>
+      <button class="plate" data-level="средний"><span class="disc d2"><em>15</em></span><span class="name" data-i18n="lv_средний"></span><span class="sub" data-i18n="lvs2"></span></button>
+      <button class="plate" data-level="высокий"><span class="disc d3"><em>25</em></span><span class="name" data-i18n="lv_высокий"></span><span class="sub" data-i18n="lvs3"></span></button>
+    </div>
+  </section>
+
+  <section class="screen" id="s-group">
+    <button class="back" data-go="level" data-i18n="back"></button>
+    <h2 id="groupTitle"></h2>
+    <div class="groups" id="groups"></div>
+  </section>
+
+  <section class="screen" id="s-work">
+    <button class="back" data-go="group" data-i18n="back"></button>
+    <h2 id="workTitle"></h2>
+    <p class="progress" id="progress"></p>
+    <ol class="ex" id="exList"></ol>
+    <div class="finish row"><button class="btn" id="finish" data-i18n="finish"></button></div>
+  </section>
+
+  <section class="screen" id="s-saved">
+    <div class="praise" data-i18n="saved"></div>
+    <p class="lead" id="savedText"></p>
+    <div class="row">
+      <button class="btn" id="histOpen2" data-i18n="history"></button>
+      <button class="btn ghost" data-go="warm" data-i18n="toHome"></button>
+    </div>
+  </section>
+</main>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<linearGradient id="gSkin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1f3f4"/><stop offset=".55" stop-color="#dde1e4"/><stop offset="1" stop-color="#c3c9ce"/></linearGradient>
+<linearGradient id="gFar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9ced3"/><stop offset="1" stop-color="#a8afb5"/></linearGradient>
+<linearGradient id="gMus" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ef5a4f"/><stop offset=".6" stop-color="#d23a2f"/><stop offset="1" stop-color="#a92419"/></linearGradient>
+<linearGradient id="gFrame" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe2e4"/></linearGradient>
+</defs></svg>
+
+<div class="shade" id="shade"></div>
+<aside class="drawer" id="drawer">
+  <button class="x" id="histClose" aria-label="×">×</button>
+  <h3 data-i18n="histH"></h3>
+  <p class="h-count" id="histCount"></p>
+  <ul id="histList"></ul>
+  <div class="reset" id="resetBox">
+    <button class="btn ghost danger" id="resetBtn" data-i18n="reset"></button>
+    <div id="resetAsk" hidden>
+      <p data-i18n="resetQ"></p>
+      <div class="row"><button class="btn danger-fill" id="resetYes" data-i18n="resetYes"></button><button class="btn ghost" id="resetNo" data-i18n="resetNo"></button></div>
+    </div>
+  </div>
+</aside>
+
+<div class="author">
+  <div class="author-pop" id="authorPop" hidden>
+    <p class="ap-h" data-i18n="authorH"></p>
+    <ol id="authorList"></ol>
+  </div>
+  <button class="author-q" id="authorBtn" aria-expanded="false" aria-controls="authorPop" data-i18n="authorQ"></button>
+  <div><span data-i18n="author"></span> <b data-i18n="authorName"></b></div>
+</div>
+
+<script>
+/* ===== ОБЩЕСУСТАВНАЯ РАЗМИНКА (по видео) ===== */
+const WARMUP = [
+  {ru:["Повороты головы влево-вправо","Медленно, без рывков, руки за спиной"], en:["Head turns left and right","Slow and controlled, hands behind your back"], reps:"10"},
+  {ru:["Руки вверх и в стороны","Локти смотрят вниз"], en:["Arms overhead and out to the sides","Elbows point down"], reps:"10"},
+  {ru:["Вращения в плечевых суставах","Руки в стороны, круги по большой амплитуде"], en:["Shoulder circles","Arms out to the sides, big circles"], reps:"10 + 10"},
+  {ru:["Вращения кистями и локтями","Кисти в замке перед грудью"], en:["Wrist and elbow circles","Hands clasped in front of the chest"], reps:"10 + 10"},
+  {ru:["Скручивания корпуса","Таз стоит на месте"], en:["Torso twists","Keep your hips still"], reps:"10"},
+  {ru:["Наклоны в стороны","!Не рекомендуется при протрузиях и грыжах"], en:["Side bends","!Not recommended with disc protrusions or hernias"], reps:"10"},
+  {ru:["Наклоны вперёд к носкам","Колени мягкие, спина без рывков"], en:["Forward bends to the toes","Soft knees, no jerking"], reps:"10"},
+  {ru:["Глубокий присед с руками вперёд","Пятки на полу, раскачивайся в нижней точке"], en:["Deep squat, arms forward","Heels down, rock gently at the bottom"], reps:"30 сек|30 sec"},
+  {ru:["Разведения и вращения рук с лёгкими гантелями","Для вращательной манжеты плеча"], en:["Light dumbbell raises and rotations","Warms up the rotator cuff"], reps:"10"},
+  {ru:["Выпады с опорой на руки","Перенос веса с ноги на ногу, раскрываем тазобедренные суставы"], en:["Lunges with hands on the floor","Shift weight leg to leg, open up the hips"], reps:"5 + 5"},
+];
+
+/* ===== ПРОГРАММА АВТОРА (фулбади) ===== */
+const AUTHOR = [
+  ["Тяга верхнего блока","4х8-12"],
+  ["Разгибание рук на трицепс","4х8-12"],
+  ["Жим лёжа","4-5х8-12"],
+  ["Сгибание рук со штангой на бицепс","4х8-12"],
+];
+
+/* ===== СПЛИТ (из файлов) ===== */
+const SPLIT = {
+  "Грудь": {
+    "начальный": [["Жим лёжа 0°","средняя","3х6-8"],["Жим лёжа 30°","тяжелая","2х8-12"],["Сведения рук в блоке снизу вверх","тяжелая","3х8-12"],["Тяга вертикального блока","средняя","3х8-12"],["Подъём гантелей перед собой","средняя","3х8-12"]],
+    "средний": [["Жим лёжа 0°","средняя","3х6-8"],["Жим лёжа 30°","тяжелая","5х8-12"],["Сведения рук в блоке снизу вверх","тяжелая","2х8-12"],["Тяга вертикального блока","средняя","3х8-12"],["Жим гантелей сидя 80°","средняя","3х8-12"]],
+    "высокий": [["Жим гантелей лёжа 30°","легкая","3х6-8"],["Пуловер в блоке","средняя","3х8-12"],["Жим штанги в нижней части амплитуды без дожима 0°","тяжелая","6х8-12"],["Сведение рук в блоке снизу вверх","тяжелая","4х8-12"],["Жим сидя в Смите 70°","средняя","5х8-12"]],
+  },
+  "Спина": {
+    "начальный": [["Тяга вертикального блока","тяжелая","3х6-8"],["Горизонтальная тяга широким хватом к груди","средняя","2х6-8"],["Горизонтальная тяга узким хватом к поясу","тяжелая","3х8-12"],["Пуловер лопатками на скамье","средняя","3х8-12"],["Жим лёжа 0°","средняя","3х6-8"]],
+    "средний": [["Тяга вертикального блока","тяжелая","5х6-8"],["Горизонтальная тяга широким хватом к груди","средняя","3х6-8"],["Горизонтальная тяга узким хватом к поясу","тяжелая","5х8-12"],["Пуловер лопатками на скамье","средняя","3х8-12"],["Жим лёжа 0°","средняя","4х6-8"]],
+    "высокий": [["Тяга вертикального блока","легкая","3х6-8"],["Пуловер на скамье","средняя","3х8-12"],["Подтягивания с доп. весом / без","тяжелая","6хMAX"],["Тяга горизонтального блока широким хватом","тяжелая","4х8-12"],["Тяга в наклоне","средняя","5х8-12"]],
+  },
+  "Ноги": {
+    "начальный": [["Присед","средняя","2х6-8"],["Румынская тяга","тяжелая","3х6-8"],["Разгибания ног в тренажёре","тяжелая","3х8-12"],["Сгибания ног в тренажёре","средняя","2х8-12"],["Подъём на носки стоя в Смите","тяжелая","3х8-12"]],
+    "средний": [["Присед","средняя","4х6-8"],["Румынская тяга","тяжелая","5х6-8"],["Разгибания ног в тренажёре","тяжелая","5х8-12"],["Сгибания ног в тренажёре","средняя","4х8-12"],["Подъём на носки стоя в Смите","тяжелая","5х8-12"]],
+    "высокий": [["Гоблет-приседания","легкая","2х6-8"],["Присед в гакке","средняя","4х6-8"],["Румынская тяга","тяжелая","6х6-8"],["Разгибания ног в тренажёре","тяжелая","5х8-12"],["Сгибания ног в тренажёре","средняя","3х8-12"],["Подъём на носки стоя в Смите","дропсет","3х12;8;6"],["Сведения ног в тренажёре","средняя","3х8-12"],["Разведения ног в тренажёре сидя","тяжелая","5х8-12"]],
+  },
+  "Плечи": {
+    "начальный": [["Жим гантелей сидя","средняя","3х6-8"],["Обратная бабочка со сведёнными лопатками","средняя","3х8-12"],["Отведения гантелей","тяжелая","3х8-12"],["Горизонтальная тяга","средняя","2х8-12"],["Жим лёжа 30°","средняя","2х6-8"]],
+    "средний": [["Жим гантелей сидя","средняя","3х6-8"],["Горизонтальная тяга широким хватом со сведёнными лопатками","тяжелая","5х8-12"],["Отведения гантелей","дропсет","3х12;8"],["Горизонтальная тяга","средняя","2х8-12"],["Жим лёжа 30°","средняя","2х6-8"]],
+    "высокий": [["Жим лёжа 30°","средняя","2х6-8"],["Тяга горизонтального блока широким хватом","средняя","2х6-8"],["Жим гантелей сидя 70°","тяжелая","6х8-12"],["Разведения рук в тренажёре бабочка лицом к спинке со сведёнными лопатками","тяжелая","6х8-12"],["Отведения на дельты в блоке","дропсет","5х12;8;6"]],
+  },
+  "Руки": {
+    "начальный": [["Сгибания рук с супинацией на бицепс","средняя","3х8-12"],["Разгибания рук в блоке на трицепс","средняя","3х8-12"],["Сгибания рук с гантелями на скамье 50°","тяжелая","3х8-12"],["Французский жим из-за головы в блоке","тяжелая","3х8-12"],["Отведения гантелей","тяжелая","3х8-12"]],
+    "средний": [["Сгибания рук на скамье Скотта","средняя","3х8-12"],["Французский жим из-за головы в блоке","средняя","3х8-12"],["Сгибания рук с гантелями с супинацией","дропсет","3х12;8"],["Разгибания рук в блоке на трицепс","дропсет","3х12;8"],["Отведения гантелей","тяжелая","4х8-12"]],
+    "высокий": [["Сгибания рук с супинацией на бицепс","средняя","3х6-8"],["Разгибания рук в блоке на трицепс","средняя","3х6-8"],["Сгибания рук с гантелями на скамье 50°","дропсет","4х12;8;6"],["Разгибания рук в блоке из-за головы","дропсет","4х12;8;6"],["Сгибания рук обратным хватом с EZ-грифом","средняя","3х8-12"],["Сгибания кистей со штангой с упором на скамью","тяжелая","4х8-12"],["Разгибания кистей со штангой с упором на скамью","тяжелая","3х8-12"]],
+  },
+  "Грудь + спина": {
+    "начальный": [["Жим лёжа","средняя","3х6-8"],["Тяга вертикального блока","тяжелая","3х6-8"],["Сведения рук в тренажёре бабочка","тяжелая","3х8-12"],["Тяга горизонтального блока","средняя","3х8-12"],["Шраги с гантелями","тяжелая","3х6-8"]],
+    "средний": [["Сведения рук в тренажёре бабочка","средняя","2х8-12"],["Тяга горизонтального блока","средняя","2х8-12"],["Жим лёжа 30°","тяжелая","5х6-8"],["Тяга вертикального блока","тяжелая","5х6-8"],["Шраги с гантелями","тяжелая","5х6-8"]],
+    "высокий": [["Подтягивания","легкая","3хMEDIUM"],["Жим лёжа 0°","легкая","3х6-8"],["Тяга вертикального блока","тяжелая","7х8-12"],["Жим гантелей в нижней части амплитуды без дожима 30°","тяжелая","6х8-12"],["Пуловер в блоке","средняя","3х8-12"],["Сведение рук в блоке сверху вниз","тяжелая","4х8-12"],["Жим гантелей сидя 70°","тяжелая","5х8-12"]],
+  },
+  "Руки + плечи": {
+    "начальный": [["Сгибания рук с супинацией на бицепс","средняя","3х8-12"],["Разгибания рук в блоке на трицепс","средняя","3х8-12"],["Сгибания рук с гантелями на скамье 50°","тяжелая","3х8-12"],["Французский жим из-за головы в блоке","тяжелая","3х8-12"],["Отведения гантелей","средняя","3х8-12"],["Жим в Смите сидя","тяжелая","3х6-8"]],
+    "средний": [["Сгибания рук с супинацией на бицепс","тяжелая","5х8-12"],["Разгибания рук в блоке на трицепс","тяжелая","5х8-12"],["Сгибания рук с гантелями на скамье 50°","средняя","3х8-12"],["Французский жим из-за головы в блоке","средняя","3х8-12"],["Отведения гантелей","тяжелая","5х8-12"],["Жим гантелей сидя","средняя","3х6-8"]],
+    "высокий": [["Подтягивания","средняя","2х3-4"],["Жим лёжа","средняя","2х3-4"],["Сгибания на бицепс EZ-грифом супинированным хватом","средняя","3х8-12"],["Сгибания на бицепс EZ-грифом пронированным хватом","тяжелая","4х8-12"],["Французский жим лёжа","средняя","3х8-12"],["Французский жим из-за головы","тяжелая","4х8-12"],["Отведения на дельты","дропсет","5х12;8;6"],["Жим сидя в Смите","тяжелая","5х8-12"]],
+  },
+};
+
+
+const TECH = {};
+function tech(names, ru, en){ names.forEach(n=>TECH[n]={ru,en}); }
+tech(["Жим лёжа 0°","Жим лёжа"],
+ ["Лопатки сведены и опущены, в пояснице небольшой прогиб","Гриф опускай на низ груди, локти под углом около 45° к корпусу","Ноги упираются в пол, таз не отрывается от скамьи"],
+ ["Shoulder blades pulled back and down, slight arch in the lower back","Lower the bar to the lower chest, elbows about 45° from the torso","Feet planted, hips stay on the bench"]);
+tech(["Жим лёжа 30°","Жим гантелей лёжа 30°"],
+ ["Скамья под углом 30°, лопатки сведены","Опускай вес к верху груди, под ключицы","Выжимай вверх и немного к лицу, не разводи локти в стороны до 90°"],
+ ["Bench at 30°, shoulder blades pulled together","Lower the weight to the upper chest, below the collarbones","Press up and slightly back, don't flare elbows to 90°"]);
+tech(["Жим штанги в нижней части амплитуды без дожима 0°","Жим гантелей в нижней части амплитуды без дожима 30°"],
+ ["Работай в нижней половине амплитуды, где грудь растянута","Не выпрямляй руки до конца, мышцы всё время под нагрузкой","Движение подконтрольное, без отбива от груди"],
+ ["Work in the bottom half of the range, where the chest is stretched","Don't lock out, keep constant tension","Controlled reps, no bouncing off the chest"]);
+tech(["Сведения рук в блоке снизу вверх","Сведение рук в блоке снизу вверх"],
+ ["Ручки блока в нижнем положении, руки чуть согнуты в локтях","Своди руки снизу вверх до уровня верха груди","Угол в локтях не меняется, работает грудь, а не руки"],
+ ["Cable handles set low, slight bend in the elbows","Bring hands together from low to chest height","Keep the elbow angle fixed so the chest does the work"]);
+tech(["Сведение рук в блоке сверху вниз"],
+ ["Ручки блока в верхнем положении, шаг вперёд, корпус чуть наклонён","Своди руки сверху вниз перед собой","Локти слегка согнуты и не меняют угол"],
+ ["Cable handles set high, step forward, lean slightly","Bring hands together from high to low in front of you","Slight, fixed bend in the elbows"]);
+tech(["Сведения рук в тренажёре бабочка"],
+ ["Спина прижата к спинке, лопатки сведены","Своди руки перед грудью, задержись на секунду","Медленно возвращай, почувствуй растяжение груди"],
+ ["Back against the pad, shoulder blades pulled together","Bring arms together in front of the chest, pause for a second","Return slowly and feel the chest stretch"]);
+tech(["Тяга вертикального блока","Тяга верхнего блока"],
+ ["Хват чуть шире плеч, грудь вперёд","Тяни рукоять к верху груди, локти вниз и назад","Не раскачивайся корпусом, вверх отпускай медленно"],
+ ["Grip slightly wider than shoulders, chest up","Pull to the upper chest, elbows down and back","Don't swing the torso, let it up slowly"]);
+tech(["Пуловер в блоке"],
+ ["Наклонись вперёд, руки почти прямые, лёгкий сгиб в локтях","Опускай рукоять дугой к бёдрам за счёт широчайших","Вверху растяни спину, корпус неподвижен"],
+ ["Lean forward, arms nearly straight with a slight elbow bend","Sweep the bar in an arc down to the thighs using the lats","Stretch the back at the top, torso stays still"]);
+tech(["Пуловер на скамье"],
+ ["Лёжа на скамье, гантель в прямых руках над грудью","Опускай вес дугой за голову до растяжения","Возвращай той же дугой, локти не сгибаются сильнее"],
+ ["Lie on the bench, dumbbell held over the chest","Lower it in an arc behind the head until you feel a stretch","Return along the same arc without bending the elbows more"]);
+tech(["Пуловер лопатками на скамье"],
+ ["Руки прямые, движение идёт за счёт лопаток","Опускай и поднимай вес с небольшой амплитудой","Чувствуй работу широчайших, а не рук"],
+ ["Arms straight, the movement comes from the shoulder blades","Small range of motion up and down","Feel the lats working, not the arms"]);
+tech(["Жим гантелей сидя 80°","Жим гантелей сидя 70°","Жим гантелей сидя"],
+ ["Спина прижата к спинке, пресс напряжён","Опускай гантели до уровня ушей, локти чуть впереди корпуса","Выжимай вверх, не ударяя гантели друг о друга"],
+ ["Back against the pad, abs braced","Lower to ear level, elbows slightly in front of the body","Press up without clanking the dumbbells together"]);
+tech(["Жим сидя в Смите 70°","Жим сидя в Смите","Жим в Смите сидя"],
+ ["Спинка скамьи 70–80°, гриф идёт перед лицом, а не за головой","Опускай гриф к подбородку или верху груди","Не выпрямляй руки с ударом, спина прижата"],
+ ["Bench back at 70–80°, the bar travels in front of your face, never behind the neck","Lower to upper chest or chin level","Don't slam into lockout, keep your back on the pad"]);
+tech(["Подъём гантелей перед собой"],
+ ["Стой ровно, руки чуть согнуты","Поднимай гантели перед собой до уровня плеч","Опускай медленно, без раскачки корпуса"],
+ ["Stand tall, slight elbow bend","Raise the dumbbells in front to shoulder height","Lower slowly without swinging"]);
+tech(["Горизонтальная тяга широким хватом к груди","Тяга горизонтального блока широким хватом","Горизонтальная тяга широким хватом со сведёнными лопатками"],
+ ["Широкий хват, спина ровная","Тяни рукоять к груди, локти в стороны","В конце сведи лопатки и задержись"],
+ ["Wide grip, straight back","Pull to the chest with elbows out","Squeeze the shoulder blades at the end and pause"]);
+tech(["Горизонтальная тяга узким хватом к поясу","Горизонтальная тяга","Тяга горизонтального блока"],
+ ["Спина ровная, колени слегка согнуты","Тяни рукоять к животу, локти вдоль корпуса","Не заваливайся назад, вперёд отпускай с растяжением спины"],
+ ["Straight back, knees slightly bent","Pull to the belly, elbows close to the body","Don't lean back, let it forward with a lat stretch"]);
+tech(["Подтягивания с доп. весом / без","Подтягивания"],
+ ["Хват чуть шире плеч, начни движение с опускания лопаток","Подтягивайся, пока подбородок не будет выше перекладины","Опускайся полностью, без рывков и раскачки"],
+ ["Grip slightly wider than shoulders, start by pulling the shoulder blades down","Pull until your chin clears the bar","Lower all the way, no kipping or swinging"]);
+tech(["Тяга в наклоне"],
+ ["Наклон корпуса 30–45°, спина прямая","Тяни штангу к низу живота, локти назад","Не округляй поясницу и не разгибайся рывком"],
+ ["Torso at 30–45°, straight back","Row the bar to the lower belly, elbows back","Don't round the lower back or jerk upright"]);
+tech(["Шраги с гантелями"],
+ ["Руки прямые, гантели по бокам","Поднимай плечи строго вверх к ушам","Не вращай плечами, опускай медленно"],
+ ["Arms straight, dumbbells at your sides","Shrug straight up towards the ears","Don't roll the shoulders, lower slowly"]);
+tech(["Присед"],
+ ["Стопы на ширине плеч, носки чуть развёрнуты","Садись назад и вниз, колени идут по линии носков","Спина ровная, пятки не отрываются от пола"],
+ ["Feet shoulder-width, toes slightly out","Sit back and down, knees track over the toes","Straight back, heels stay on the floor"]);
+tech(["Гоблет-приседания"],
+ ["Держи гантель у груди, локти вниз","Садись глубоко между коленями","Корпус вертикальный, пятки на полу"],
+ ["Hold the dumbbell at the chest, elbows down","Sit deep between the knees","Upright torso, heels down"]);
+tech(["Присед в гакке"],
+ ["Спина и таз плотно прижаты к платформе","Опускайся подконтрольно до нужной глубины","Не выпрямляй колени до щелчка вверху"],
+ ["Back and hips pressed into the pad","Lower under control to full depth","Don't snap the knees locked at the top"]);
+tech(["Румынская тяга"],
+ ["Колени слегка согнуты и не меняют угол","Отводи таз назад, гриф скользит вдоль ног","Спина прямая, опускайся до растяжения задней поверхности бедра"],
+ ["Slight, fixed bend in the knees","Push the hips back, bar slides along the legs","Straight back, lower until the hamstrings stretch"]);
+tech(["Разгибания ног в тренажёре"],
+ ["Колени на оси тренажёра, спина прижата","Разгибай ноги до конца, задержись вверху","Опускай медленно"],
+ ["Knees lined up with the machine pivot, back against the pad","Extend fully and pause at the top","Lower slowly"]);
+tech(["Сгибания ног в тренажёре"],
+ ["Валик над пятками, колени на оси тренажёра","Сгибай ноги, не отрывая таз","Опускай медленно, не бросай вес"],
+ ["Pad just above the heels, knees at the pivot","Curl without lifting the hips","Lower slowly, don't drop the weight"]);
+tech(["Подъём на носки стоя в Смите"],
+ ["Носки на платформе, пятки свисают","Поднимайся на носки максимально высоко","Внизу опускай пятки до растяжения икр"],
+ ["Balls of the feet on a platform, heels hanging off","Rise as high as possible","Drop the heels low for a full calf stretch"]);
+tech(["Сведения ног в тренажёре"],
+ ["Спина прижата к спинке","Своди ноги подконтрольно","Разводи медленно, без рывка"],
+ ["Back against the pad","Squeeze the legs together under control","Open slowly, no jerking"]);
+tech(["Разведения ног в тренажёре сидя"],
+ ["Сядь ровно, держись за ручки","Разводи ноги в стороны до упора","Своди медленно"],
+ ["Sit upright and hold the handles","Push the legs apart as far as they go","Bring them back slowly"]);
+tech(["Обратная бабочка со сведёнными лопатками","Разведения рук в тренажёре бабочка лицом к спинке со сведёнными лопатками"],
+ ["Сядь лицом к спинке, лопатки сведены","Разводи руки назад в стороны почти прямыми","Работают задние дельты, не тяни плечами к ушам"],
+ ["Sit facing the pad, shoulder blades pulled together","Open the arms out and back, nearly straight","Rear delts do the work, don't shrug"]);
+tech(["Отведения гантелей","Отведения на дельты","Отведения на дельты в блоке"],
+ ["Лёгкий наклон вперёд, локти чуть согнуты","Поднимай руки в стороны до уровня плеч","Локоть выше кисти, без раскачки корпуса"],
+ ["Slight forward lean, soft elbows","Raise the arms out to shoulder height","Elbow above the wrist, no body swing"]);
+tech(["Сгибания рук с супинацией на бицепс","Сгибания рук с гантелями с супинацией"],
+ ["Локти прижаты к корпусу","При подъёме разворачивай ладони вверх","Не раскачивайся, опускай вниз до конца"],
+ ["Elbows pinned to your sides","Turn the palms up as you curl","No swinging, lower all the way"]);
+tech(["Сгибания рук с гантелями на скамье 50°"],
+ ["Сядь на скамью под 50°, руки свисают вниз","Сгибай руки, локти не уходят вперёд","Внизу полностью выпрямляй руки"],
+ ["Sit on a 50° bench, arms hanging down","Curl without moving the elbows forward","Straighten fully at the bottom"]);
+tech(["Сгибания рук на скамье Скотта"],
+ ["Подмышки плотно на подушке скамьи","Сгибай руки, не отрывая локти","Внизу не выпрямляй руки рывком"],
+ ["Armpits snug on the pad","Curl without lifting the elbows","Don't snap into straight arms at the bottom"]);
+tech(["Сгибание рук со штангой на бицепс","Сгибания на бицепс EZ-грифом супинированным хватом"],
+ ["Хват снизу на ширине плеч, локти прижаты","Поднимай штангу к груди без раскачки","Опускай медленно до почти прямых рук"],
+ ["Underhand grip at shoulder width, elbows in","Curl to the chest without swinging","Lower slowly to nearly straight arms"]);
+tech(["Сгибания рук обратным хватом с EZ-грифом","Сгибания на бицепс EZ-грифом пронированным хватом"],
+ ["Хват сверху, кисти прямые","Сгибай руки, локти прижаты к корпусу","Вес меньше, чем в обычных сгибаниях"],
+ ["Overhand grip, wrists straight","Curl with elbows pinned to your sides","Use less weight than for regular curls"]);
+tech(["Разгибания рук в блоке на трицепс","Разгибание рук на трицепс"],
+ ["Локти прижаты к корпусу и неподвижны","Разгибай руки до конца вниз","Вверх поднимай только предплечья"],
+ ["Elbows pinned to your sides and still","Extend the arms fully down","Only the forearms move back up"]);
+tech(["Французский жим из-за головы в блоке","Разгибания рук в блоке из-за головы","Французский жим из-за головы"],
+ ["Встань спиной к блоку, локти смотрят вперёд","Разгибай руки над головой","Локти не разъезжаются в стороны, опускай с растяжением"],
+ ["Face away from the cable, elbows pointing forward","Extend the arms overhead","Keep elbows in, lower into a stretch"]);
+tech(["Французский жим лёжа"],
+ ["Лёжа, гриф над лбом, локти смотрят вверх","Опускай гриф ко лбу или за голову","Разгибай руки, локти не разводи"],
+ ["Lying down, bar over the forehead, elbows up","Lower to the forehead or behind the head","Extend without flaring the elbows"]);
+tech(["Сгибания кистей со штангой с упором на скамью"],
+ ["Сядь на край скамьи, предплечья на бёдрах, ладони вверх","Сгибай кисти вверх","Внизу дай штанге скатиться к пальцам"],
+ ["Sit on the end of a bench, forearms on your thighs, palms up","Curl the wrists up","Let the bar roll to the fingers at the bottom"]);
+tech(["Разгибания кистей со штангой с упором на скамью"],
+ ["Сядь на край скамьи, предплечья на бёдрах, ладони вниз","Поднимай кисти вверх","Вес небольшой, движение плавное"],
+ ["Sit on the end of a bench, forearms on your thighs, palms down","Lift the backs of the hands up","Light weight, smooth movement"]);
+
+/* ===== ИЛЛЮСТРАЦИИ УПРАЖНЕНИЙ: рисуются кодом (SVG) ===== */
+const FIG = (()=>{
+const R = Math.PI/180;
+const LEN = {torso:50, ua:28, fa:25, th:40, sh:38};
+const add=(p,q)=>[p[0]+q[0],p[1]+q[1]], sub=(p,q)=>[p[0]-q[0],p[1]-q[1]], mul=(p,k)=>[p[0]*k,p[1]*k];
+const len=v=>Math.hypot(v[0],v[1]), unit=v=>{const l=len(v)||1;return [v[0]/l,v[1]/l];};
+const D = a => [Math.sin(a*R), Math.cos(a*R)];           // угол от вертикали вниз, «+» = вперёд
+const ang = v => Math.atan2(v[1],v[0])/R;
+const f1 = n => Math.round(n*10)/10, P = p => f1(p[0])+","+f1(p[1]);
+let UID = 0; const ISSUES = [];
+
+function smooth(pts, closed=true){
+  const n=pts.length; let d="M"+P(pts[0]);
+  const last = closed ? n : n-1;
+  for(let i=0;i<last;i++){
+    const p1=pts[i], p2=pts[(i+1)%n];
+    const p0 = (!closed && i===0) ? p1 : pts[(i-1+n)%n];
+    const p3 = (!closed && i===n-2) ? p2 : pts[(i+2)%n];
+    const c1=[p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6], c2=[p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6];
+    d+=" C"+P(c1)+" "+P(c2)+" "+P(p2);
+  }
+  return d+(closed?"Z":"");
+}
+// обратная кинематика: sign — в какую сторону гнётся сустав (колено +1, локоть −1)
+function ik(base, target, l1, l2, sign){
+  const dv=sub(target,base), d=len(dv);
+  const dc=Math.min(Math.max(d,Math.abs(l1-l2)+.01),l1+l2-.01);
+  const a=Math.atan2(dv[1],dv[0]), off=Math.acos((l1*l1+dc*dc-l2*l2)/(2*l1*dc));
+  const sols=[1,-1].map(s=>{
+    const j=add(base,[Math.cos(a+s*off)*l1, Math.sin(a+s*off)*l1]);
+    const e=add(j,mul(unit(sub(target,j)),l2));
+    const v1=sub(j,base), v2=sub(e,j);
+    return {j,e,cr:v1[0]*v2[1]-v1[1]*v2[0]};
+  });
+  return sols.find(x=>Math.sign(x.cr)===sign) || sols[0];
+}
+// органичная форма конечности по профилю радиусов (спереди / сзади)
+function limb(a,b,rf,rb){
+  const u=unit(sub(b,a)), n=[u[1],-u[0]], L=len(sub(b,a)), ts=[0,.2,.45,.72,1];
+  const at=(t,r)=>add(add(a,mul(u,L*t)),mul(n,r));
+  const pts=[add(a,mul(u,-rf[0]*.85))];
+  ts.forEach((t,i)=>pts.push(at(t,rf[i])));
+  pts.push(add(b,mul(u,rf[4]*.85)));
+  for(let i=ts.length-1;i>=0;i--) pts.push(at(ts[i],-rb[i]));
+  return smooth(pts);
+}
+const PROF = {
+  ua:[[6.2,6.8,7.2,5.8,4.6],[6.4,7.2,6.6,5.2,4.6]],
+  fa:[[4.9,5.4,4.6,3.4,3],[4.9,5.2,4.3,3.3,3]],
+  th:[[9.5,9.6,8.8,7,6],[10,9.4,8.2,6.6,6]],
+  sh:[[5.6,5.2,4.4,3.6,3.3],[5.8,7.2,6.4,4,3.4]],
+};
+const clipDef=(id,d)=>`<clipPath id="${id}"><path d="${d}"/></clipPath>`;
+const mel=(c,rx,ry,a,clip)=>`<ellipse class="mus" cx="${f1(c[0])}" cy="${f1(c[1])}" rx="${f1(rx)}" ry="${f1(ry)}" transform="rotate(${f1(a)} ${f1(c[0])} ${f1(c[1])})"${clip?` clip-path="url(#${clip})"`:""}/>`;
+const pth=(d,cls)=>`<path class="${cls}" d="${d}"/>`;
+const circ=(c,r,cls)=>`<circle class="${cls}" cx="${f1(c[0])}" cy="${f1(c[1])}" r="${r}"/>`;
+const lin=(a,b,cls,w)=>`<line class="${cls}" x1="${f1(a[0])}" y1="${f1(a[1])}" x2="${f1(b[0])}" y2="${f1(b[1])}"${w?` stroke-width="${w}"`:""}/>`;
+function limbMuscle(a,b,side,t0,t1,wr,clip){
+  const u=unit(sub(b,a)), n=[u[1],-u[0]], L=len(sub(b,a));
+  const c=add(add(a,mul(u,L*(t0+t1)/2)),mul(n,side*wr*.55));
+  return mel(c,L*(t1-t0)/2,wr*.85,ang(u),clip)
+    + `<path class="fib" d="M${P(add(c,mul(u,-L*(t1-t0)*.3)))} L${P(add(c,mul(u,L*(t1-t0)*.3)))}" clip-path="url(#${clip})"/>`;
+}
+
+function detail(a,b,t0,t1,off){
+  const u=unit(sub(b,a)), n=[u[1],-u[0]], L=len(sub(b,a));
+  const p=t=>add(add(a,mul(u,L*t)),mul(n,off*(1-Math.abs(t-(t0+t1)/2))));
+  return `<path class="cont" d="M${P(p(t0))} Q${P(p((t0+t1)/2))} ${P(p(t1))}"/>`;
+}
+/* ---------------- ВИД СБОКУ ---------------- */
+function sideJ(p){
+  const J={}, t=p.t||0;
+  J.hip=p.hip; J.u=[Math.sin(t*R),-Math.cos(t*R)]; J.nf=[-J.u[1],J.u[0]];
+  J.sh=add(J.hip,mul(J.u,LEN.torso));
+  J.hd=t+(p.head||0);
+  J.head=add(J.sh,mul([Math.sin(J.hd*R),-Math.cos(J.hd*R)],17));
+  const leg=(hip,ankle,knee)=> knee ? {k:knee,a:ankle} : (r=>({k:r.j,a:r.e}))(ik(hip,ankle,LEN.th,LEN.sh,1));
+  const arm=(sh,hand,el,wr)=> el ? {el,wr} : (r=>({el:r.j,wr:r.e}))(ik(sh,hand,LEN.ua,LEN.fa,-1));
+  const l=leg(J.hip,p.ankle,p.knee); J.knee=l.k; J.ankle=l.a; J.foot=p.foot??90;
+  const pe = typeof p.elbow==="function" ? p.elbow(J) : p.elbow, pw = typeof p.wrist==="function" ? p.wrist(J) : p.wrist;
+  const a=arm(J.sh,p.hand,pe,pw); J.el=a.el; J.wr=a.wr;
+  J.hv = p.handDir!=null ? D(p.handDir) : unit(sub(J.wr,J.el));
+  J.grip=add(J.wr,mul(J.hv,4.5));
+  const fo=p.farOff||[-3,-2];
+  J.fhip=add(J.hip,fo); J.fsh=add(J.sh,fo);
+  const fl=leg(J.fhip, p.farAnkle||add(J.ankle,[-7,0]), p.farKnee); J.fknee=fl.k; J.fankle=fl.a; J.ffoot=p.farFoot??J.foot;
+  const fa=arm(J.fsh, p.farHand||add(J.wr,fo), pe?add(pe,fo):null, pw?add(pw,fo):null);
+  J.fel=fa.el; J.fwr=fa.wr; J.fhv = p.handDir!=null ? D(p.handDir) : unit(sub(J.fwr,J.fel));
+  return J;
+}
+function torsoSide(J){
+  const at=(s,o)=>add(add(J.hip,mul(J.u,LEN.torso*s)),mul(J.nf,o));
+  return {d:smooth([at(-.1,-2),at(-.02,9.5),at(.3,8.5),at(.52,10.5),at(.74,13.5),at(.92,11.5),at(1.06,5),at(1.08,-5),at(.96,-11.5),at(.72,-12.8),at(.4,-9.8),at(.18,-11.5),at(.02,-13.5)]), at};
+}
+function shoe(ankle,fa,cls){
+  const f=D(fa), up=[f[1],-f[0]];
+  const pt=(a,b)=>add(add(ankle,mul(f,a)),mul(up,b));
+  return pth(smooth([pt(-5,-5.5),pt(4,-6),pt(15,-5.5),pt(17.5,-2.5),pt(15,.8),pt(8,3.2),pt(3,6.5),pt(-3.5,6),pt(-6,.5)]),cls)
+    + `<path class="sole" d="M${P(pt(-5.5,-5))} L${P(pt(16.5,-4.8))}"/>`;
+}
+function hand(wr,hv,cls){
+  const c=add(wr,mul(hv,4.2)), a=ang(hv), n=[hv[1],-hv[0]], th=add(add(wr,mul(hv,3)),mul(n,3.4));
+  return `<ellipse class="${cls}" cx="${f1(th[0])}" cy="${f1(th[1])}" rx="3.2" ry="1.9" transform="rotate(${f1(a-35)} ${f1(th[0])} ${f1(th[1])})"/>`
+    + `<ellipse class="${cls}" cx="${f1(c[0])}" cy="${f1(c[1])}" rx="5.6" ry="4" transform="rotate(${f1(a)} ${f1(c[0])} ${f1(c[1])})"/>`
+    + `<path class="cont" d="M${P(add(add(c,mul(hv,2.2)),mul(n,2.6)))} L${P(add(add(c,mul(hv,2.2)),mul(n,-2.6)))}"/>`;
+}
+function headSide(J){
+  const c=J.head, a=J.hd, f=[Math.cos(a*R),Math.sin(a*R)], up=[Math.sin(a*R),-Math.cos(a*R)];
+  const pt=(x,y)=>add(add(c,mul(f,x)),mul(up,y));
+  const id="h"+(++UID);
+  const head=smooth([pt(-9.5,2),pt(-8,8),pt(0,11.5),pt(7,9),pt(9.6,3),pt(10.2,-.5),pt(12.4,-2.8),pt(10,-5),pt(9.4,-8.6),pt(5.5,-11.6),pt(0,-11.8),pt(-7,-8)]);
+  const hc=pt(-3.5,6);
+  return `<defs>${clipDef(id,head)}</defs>`+pth(head,"skin")
+   + `<ellipse class="hair" cx="${f1(hc[0])}" cy="${f1(hc[1])}" rx="11.5" ry="8" clip-path="url(#${id})" transform="rotate(${f1(a)} ${f1(hc[0])} ${f1(hc[1])})"/>`
+   + (e=>`<ellipse class="ear" cx="${f1(e[0])}" cy="${f1(e[1])}" rx="2.2" ry="3.2" transform="rotate(${f1(a)} ${f1(e[0])} ${f1(e[1])})"/>`)(pt(-1.5,-.5))
+   + (e=>`<ellipse class="eye" cx="${f1(e[0])}" cy="${f1(e[1])}" rx="1" ry="1.35"/>`)(pt(6.3,1.6))
+   + `<path class="face" d="M${P(pt(4.2,4.2))} Q${P(pt(6.5,5.2))} ${P(pt(8.8,4))} M${P(pt(8.6,-6.6))} L${P(pt(10.3,-6.2))} M${P(pt(1,-9.5))} Q${P(pt(5,-11.6))} ${P(pt(8.6,-10.4))}"/>`;
+}
+function shortsTorso(d,J,tid){
+  const at=(s,o)=>add(add(J.hip,mul(J.u,LEN.torso*s)),mul(J.nf,o));
+  const id="sb"+(++UID);
+  return `<defs><clipPath id="${id}"><path d="M${P(at(.24,-40))} L${P(at(.24,40))} L${P(at(-.6,40))} L${P(at(-.6,-40))}Z"/></clipPath></defs><g clip-path="url(#${id})"><path class="shorts" d="${d}"/></g>`
+   + `<path class="band" d="M${P(at(.24,-12.2))} L${P(at(.24,9.2))}"/>`;
+}
+function drawSide(p,mus){
+  const J=sideJ(p), hl=m=>mus.includes(m);
+  let s="", defs="";
+  const legShape=(hip,knee,ankle,foot,cls)=>{
+    const th=limb(hip,knee,...PROF.th), shn=limb(knee,ankle,...PROF.sh);
+    const far=cls.includes("far");
+    const sh=limb(hip,add(hip,mul(sub(knee,hip),.52)),[10.3,10.4,9.8,9.2,9],[10.8,10.2,9.6,9,8.8]);
+    return {th,shn,svg:shoe(ankle,foot,"shoe"+(far?" far":""))+pth(shn,cls)+pth(th,cls)+pth(sh,"shorts"+(far?" far":""))};
+  };
+  const armShape=(sh,el,wr,hv,cls)=>{
+    const ua=limb(sh,el,...PROF.ua), fa=limb(el,wr,...PROF.fa);
+    return {ua,fa,svg:pth(fa,cls)+hand(wr,hv,cls)+pth(ua,cls)};
+  };
+  if(p.farLeg!==false) s+=legShape(J.fhip,J.fknee,J.fankle,J.ffoot,"skin far").svg;
+  if(p.farArm!==false) s+=armShape(J.fsh,J.fel,J.fwr,J.fhv,"skin far").svg;
+  if(p.gripBack) s+=grip(p,J);
+  const T=torsoSide(J), tid="t"+(++UID); defs+=clipDef(tid,T.d);
+  const tA=ang(J.u);
+  s+=pth(smooth([add(J.sh,mul(J.nf,-6)),add(J.sh,mul(J.nf,5)),add(J.head,mul(J.nf,2)),add(J.head,mul(J.nf,-5))]),"skin");
+  s+=pth(T.d,"skin");
+  s+=pth(smooth([T.at(.64,13),T.at(.6,6),T.at(.66,0)],false),"cont");
+  s+=pth(smooth([T.at(.95,-10.5),T.at(.8,-7),T.at(.68,-9)],false),"cont");
+  if(hl("chest")) s+=`<path class="mus" clip-path="url(#${tid})" d="${smooth([T.at(.97,5),T.at(.99,12.5),T.at(.84,15),T.at(.64,12.8),T.at(.6,5),T.at(.8,1.5)])}"/>`+`<path class="fib" clip-path="url(#${tid})" d="M${P(T.at(.93,4))} L${P(T.at(.72,12))}"/>`;
+  if(hl("lats")) s+=`<path class="mus" clip-path="url(#${tid})" d="${smooth([T.at(.9,-6),T.at(.86,-13.5),T.at(.6,-12.5),T.at(.36,-10),T.at(.5,-6.5),T.at(.74,-4.5)])}"/>`;
+  if(hl("upperback")) s+=mel(T.at(.86,-10),9,6.5,tA,tid);
+  if(hl("traps")) s+=mel(T.at(1.03,-6),8,5.5,tA,tid);
+  s+=shortsTorso(T.d,J,tid);
+  if(hl("glutes")) s+=mel(T.at(.04,-8),10,9,tA,tid);
+  s+=headSide(J);
+  const lg=legShape(J.hip,J.knee,J.ankle,J.foot,"skin");
+  s+=lg.svg;
+  const thid="q"+(++UID), shid="c"+(++UID); defs+=clipDef(thid,lg.th)+clipDef(shid,lg.shn);
+  if(hl("quads")) s+=limbMuscle(J.hip,J.knee,1,.12,.86,9,thid);
+  if(hl("hams")) s+=limbMuscle(J.hip,J.knee,-1,.14,.88,9,thid);
+  if(hl("calves")) s+=limbMuscle(J.knee,J.ankle,-1,.08,.6,6.5,shid);
+  s+=detail(J.hip,J.knee,.3,.85,3.5)+detail(J.knee,J.ankle,.12,.55,-3.2);
+  const ku=unit(sub(J.ankle,J.knee)), kn=[ku[1],-ku[0]];
+  s+=pth(smooth([add(add(J.knee,mul(kn,4.5)),mul(ku,-3)),add(add(J.knee,mul(kn,6)),mul(ku,1)),add(add(J.knee,mul(kn,4.5)),mul(ku,4))],false),"cont");
+  if(p.gripBehindArm) s+=grip(p,J);
+  const ar=armShape(J.sh,J.el,J.wr,J.hv,"skin"); s+=ar.svg;
+  s+=detail(J.sh,J.el,.35,.85,0)+detail(J.el,J.wr,.1,.5,1.5);
+  const uid="a"+(++UID), fid="f"+(++UID); defs+=clipDef(uid,ar.ua)+clipDef(fid,ar.fa);
+  if(hl("biceps")) s+=limbMuscle(J.sh,J.el,1,.24,.9,6.8,uid);
+  if(hl("triceps")) s+=limbMuscle(J.sh,J.el,-1,.2,.92,6.8,uid);
+  if(hl("forearms")) s+=limbMuscle(J.el,J.wr,0,.05,.62,5.2,fid);
+  const uv=unit(sub(J.el,J.sh)), cap=add(J.sh,mul(uv,5)), nA=[uv[1],-uv[0]];
+  const did="d"+(++UID), capPath=limb(add(J.sh,mul(uv,-3)),add(J.sh,mul(uv,13)),[7.5,8.5,8.4,6.5,2.5],[7.5,8.8,8.6,6.8,2.5]);
+  defs+=clipDef(did,capPath);
+  s+=pth(capPath,"skin");
+  if(hl("delt_front")) s+=mel(add(cap,mul(nA,5)),8,6,ang(uv),did);
+  if(hl("delt_side")) s+=mel(cap,9,8,ang(uv),did);
+  if(hl("delt_rear")) s+=mel(add(cap,mul(nA,-5)),8,6,ang(uv),did);
+  if(!p.gripBehindArm && !p.gripBack) s+=grip(p,J);
+  return {svg:`<defs>${defs}</defs>`+s, J};
+}
+
+/* ---------------- ВИД СПЕРЕДИ / СЗАДИ ---------------- */
+function drawFront(p,mus){
+  const cx=p.cx??100, hy=p.hipY??112, e=p.shrug||0, rear=!!p.rear, hl=m=>mus.includes(m);
+  const shY=hy-48-e;
+  let s="", defs="";
+  const mir=(pt,side)=>[cx+side*(pt[0]-cx),pt[1]];
+  const armPts=side=>{
+    const A=(side<0&&p.armL)?p.armL:p.arm;
+    const shp=[cx+side*19,shY+4];
+    const el=mir([cx+A.el[0],shY+A.el[1]],side), wr=mir([cx+A.wr[0],shY+A.wr[1]],side);
+    const hv=unit(sub(wr,el));
+    return {shp,el,wr,hv,grip:add(wr,mul(hv,4.5)),A};
+  };
+  const legPts=side=>{
+    const L=p.leg||{knee:[10.5,42],ankle:[12,190]};
+    return {hp:[cx+side*9.5,hy+2],kn:mir([cx+L.knee[0],hy+L.knee[1]],side),an:mir([cx+L.ankle[0],L.ankle[1]],side)};
+  };
+  const sides=[-1,1];
+  const drawArm=(side)=>{
+    const a=armPts(side); let o="";
+    if(a.A.hidden) return "";
+    const ua=limb(a.shp,a.el,[6.4,7,6.6,5.4,4.6],[6.4,7,6.6,5.4,4.6]), fa=limb(a.el,a.wr,[5,5.3,4.5,3.4,3],[5,5.3,4.5,3.4,3]);
+    o+=pth(fa,"skin")+hand(a.wr,a.hv,"skin")+pth(ua,"skin");
+    const id="fa"+(++UID); defs+=clipDef(id,ua);
+    if(hl("biceps")&&!rear) o+=limbMuscle(a.shp,a.el,0,.25,.92,6.6,id);
+    if(hl("triceps")&&rear) o+=limbMuscle(a.shp,a.el,0,.2,.92,6.6,id);
+    if(hl("forearms")){ const fid="ff"+(++UID); defs+=clipDef(fid,fa); o+=limbMuscle(a.el,a.wr,0,.05,.6,5,fid); }
+    // дельтовидная мышца: охватывает плечо снаружи и крепится к середине плеча
+    const uv=unit(sub(a.el,a.shp)), L=len(sub(a.el,a.shp));
+    // «наружная» сторона плеча: всегда от центра тела и чуть вверх — дельта не уезжает к голове
+    const ref=[side*.8,-.6]; let no=[uv[1],-uv[0]]; if(no[0]*ref[0]+no[1]*ref[1]<0) no=[-no[0],-no[1]];
+    const q=(t,o)=>add(add(a.shp,mul(uv,28*t)),mul(no,o));
+    const dp=smooth([q(-.24,-3),q(-.2,4.5),q(.02,8.6),q(.3,8.2),q(.52,5.4),q(.56,2),q(.36,-2.5),q(.1,-6),q(-.12,-6.2)]);
+    const did="fd"+(++UID); defs+=clipDef(did,dp); o+=pth(dp,"skin");
+    o+=`<path class="cont" d="M${P(q(.05,-1))} Q${P(q(.3,1.5))} ${P(q(.5,3.2))}"/>`;
+    if(hl("delt_side")||hl("delt_front")||hl("delt_rear")) o+=`<path class="mus" clip-path="url(#${did})" d="${smooth([q(-.2,1),q(.02,9),q(.3,9),q(.54,4),q(.4,0),q(.1,-2)])}"/>`;
+    if(!(p.gripOne && side<0)) o+=frontGrip(p.grip,a,side);
+    return o;
+  };
+  if(p.armsBehind) sides.forEach(sd=>s+=drawArm(sd));
+  for(const side of sides){
+    const g=legPts(side);
+    const th=limb(g.hp,g.kn,[9.6,10,9,7.2,6.2],[9.6,10,9,7.2,6.2]), sh=limb(g.kn,g.an,[5.6,6.4,5.4,3.8,3.4],[5.6,6.4,5.4,3.8,3.4]);
+    s+=frontShoe(g.an,side)+pth(sh,"skin")+pth(th,"skin")+pth(limb(g.hp,add(g.hp,mul(sub(g.kn,g.hp),.55)),[10.6,10.8,10,9.4,9.2],[10.6,10.8,10,9.4,9.2]),"shorts");
+    s+=`<ellipse class="cont" cx="${f1(g.kn[0])}" cy="${f1(g.kn[1]+1)}" rx="3.2" ry="4"/>`;
+    const id="fl"+(++UID); defs+=clipDef(id,th);
+    if(hl("adductors")) s+=limbMuscle(g.hp,g.kn,side>0?1:-1,.08,.72,9.6,id);
+    if(hl("quads")&&!rear) s+=limbMuscle(g.hp,g.kn,0,.12,.88,9,id);
+    if(hl("abductors")) s+=limbMuscle(g.hp,g.kn,side>0?-1:1,.0,.5,9.6,id);
+  }
+  // корпус: верх привязан к плечам, низ — к тазу
+  const top=[[6,-9],[15,-4.5],[22,-.5],[24.5,5],[20,17],[16.5,30]], bot=[[14,-4],[16.5,-12+12],[13.5,10],[6,16]];
+  const R_=[...top.map(q=>[cx+q[0],shY+q[1]]), [cx+14,hy-18],[cx+16.5,hy-4],[cx+13.5,hy+8],[cx+6,hy+14]];
+  const pts=[...R_, [cx,hy+15], ...R_.slice().reverse().map(q=>[2*cx-q[0],q[1]])];
+  const T=smooth(pts), tid="ft"+(++UID); defs+=clipDef(tid,T);
+  s+=pth(smooth([[cx-6.5,shY-1],[cx+6.5,shY-1],[cx+5.5,shY-16],[cx-5.5,shY-16]]),"skin");
+  s+=pth(T,"skin");
+  { const id="fs"+(++UID); defs+=`<clipPath id="${id}"><rect x="${cx-40}" y="${hy-13}" width="80" height="40"/></clipPath>`;
+    s+=`<g clip-path="url(#${id})"><path class="shorts" d="${T}"/></g><path class="band" d="M${cx-15} ${hy-13} L${cx+15} ${hy-13}"/>`; }
+  if(!rear){
+    s+=pth(smooth([[cx-19,shY+11],[cx-10,shY+19],[cx,shY+16],[cx+10,shY+19],[cx+19,shY+11]],false),"cont");
+    s+=`<path class="cont" d="M${cx-3} ${f1(shY-1)} Q${cx-11} ${f1(shY-2.5)} ${cx-19} ${f1(shY+.5)} M${cx+3} ${f1(shY-1)} Q${cx+11} ${f1(shY-2.5)} ${cx+19} ${f1(shY+.5)}"/>`
+     + `<path class="cont" d="M${cx-15} ${f1(shY+24)} Q${cx-13} ${f1(shY+34)} ${cx-12} ${f1(hy-16)} M${cx+15} ${f1(shY+24)} Q${cx+13} ${f1(shY+34)} ${cx+12} ${f1(hy-16)}"/>`;
+    s+=lin([cx,shY+4],[cx,hy-16],"cont");
+    for(const k of [0,1,2]) if(shY+27+k*8<hy-16) s+=lin([cx-7,shY+27+k*8],[cx+7,shY+27+k*8],"cont");
+    if(hl("chest")) for(const sd of sides){ const q=(x,y)=>[cx+sd*x,shY+y];
+      s+=`<path class="mus" clip-path="url(#${tid})" d="${smooth([q(1.5,3),q(15,.5),q(21.5,8),q(18,18.5),q(9,21),q(1.5,18)])}"/>`+`<path class="fib" d="M${P(q(4,8))} L${P(q(16,6))} M${P(q(4,14))} L${P(q(16,13))}"/>`; }
+    if(hl("lats")) for(const sd of sides){ const q=(x,y)=>[cx+sd*x,y]; s+=`<path class="mus" clip-path="url(#${tid})" d="${smooth([q(21,shY+11),q(19,shY+26),q(15.5,hy-18),q(14,shY+30),q(16,shY+18)])}"/>`; }
+  } else {
+    s+=lin([cx,shY-2],[cx,hy-16],"cont");
+    for(const sd of sides) s+=pth(smooth([[cx+sd*6,shY+6],[cx+sd*14,shY+4],[cx+sd*13,shY+20],[cx+sd*7,shY+18]]),"cont");
+    if(hl("lats")) for(const sd of sides){ const q=(x,y)=>[cx+sd*x,y]; s+=`<path class="mus" clip-path="url(#${tid})" d="${smooth([q(20,shY+9),q(18.5,shY+26),q(14,hy-16),q(7,hy-20),q(8,shY+26),q(12,shY+14)])}"/>`; }
+    if(hl("upperback")) s+=`<path class="mus" clip-path="url(#${tid})" d="${smooth([[cx,shY],[cx+14,shY+9],[cx+6,shY+22],[cx,shY+30],[cx-6,shY+22],[cx-14,shY+9]])}"/>`;
+  }
+  if(hl("traps")) for(const sd of sides) s+=mel([cx+sd*11,shY-2.5],9,4.8,sd*20,tid);
+
+  const hc=[cx,shY-25], hid="fh"+(++UID);
+  defs+=`<clipPath id="${hid}"><ellipse cx="${cx}" cy="${f1(hc[1])}" rx="10" ry="12"/></clipPath>`;
+  s+=`<ellipse class="ear" cx="${cx-10}" cy="${f1(hc[1]+1)}" rx="2.3" ry="3.5"/><ellipse class="ear" cx="${cx+10}" cy="${f1(hc[1]+1)}" rx="2.3" ry="3.5"/>`;
+  s+=`<ellipse class="skin" cx="${cx}" cy="${f1(hc[1])}" rx="10" ry="12"/><ellipse class="hair" cx="${cx}" cy="${f1(hc[1]+(rear?-2:-10))}" rx="12.5" ry="${rear?12:7.5}" clip-path="url(#${hid})"/>`;
+  if(!rear){ const y=hc[1];
+    s+=`<ellipse class="eye" cx="${cx-3.7}" cy="${f1(y+.4)}" rx="1.25" ry=".95"/><ellipse class="eye" cx="${cx+3.7}" cy="${f1(y+.4)}" rx="1.25" ry=".95"/>`
+     + `<path class="face" d="M${cx-5.8} ${f1(y-2.2)} L${cx-1.8} ${f1(y-2.6)} M${cx+1.8} ${f1(y-2.6)} L${cx+5.8} ${f1(y-2.2)} M${cx-1.4} ${f1(y+4.8)} Q${cx} ${f1(y+5.8)} ${cx+1.4} ${f1(y+4.8)} M${cx-2.8} ${f1(y+8)} L${cx+2.8} ${f1(y+8)}"/>`
+     + `<path class="face soft" d="M${cx} ${f1(y+.5)} L${cx} ${f1(y+4.4)}"/>`; }
+  if(!p.armsBehind) sides.forEach(sd=>s+=drawArm(sd));
+  return {svg:`<defs>${defs}</defs>`+s, arm:armPts, leg:legPts, shY, cx, hy};
+}
+function frontShoe(an,side){
+  const c=add(an,[side*2.5,4]);
+  return pth(smooth([add(c,[-4.5*side,-3.5]),add(c,[5*side,-3]),add(c,[8*side,1]),add(c,[6*side,3.5]),add(c,[-4.5*side,3.5]),add(c,[-6*side,0])]),"shoe");
+}
+
+/* ---------------- СНАРЯДЫ В РУКАХ ---------------- */
+function hex(c,r){ const pts=[0,1,2,3,4,5].map(i=>add(c,[Math.cos((i*60+30)*R)*r,Math.sin((i*60+30)*R)*r])); return `<path class="plate" stroke-linejoin="round" d="M${pts.map(P).join(" L")}Z"/>`; }
+function plate(c,r){ let s=circ(c,r,"plate")+circ(c,r*.8,"plate-ring")+circ(c,r*.3,"steel-f")+circ(c,r*.12,"plate");
+  if(r>14) for(const a of [30,150,270]) s+=circ(add(c,[Math.cos(a*R)*r*.56,Math.sin(a*R)*r*.56]),r*.13,"hole");
+  return s; }
+function grip(p,J){
+  const g=p.grip; if(!g) return "";
+  const c = p.gripPt ? p.gripPt(J) : J.grip;
+  if(g==="barbell") return plate(c,17);
+  if(g==="ez") return plate(c,12);
+  if(g==="dumbbell") return hex(c,8.2)+circ(c,5,"plate-ring")+circ(c,2.4,"steel-f");
+  if(g==="dbv") return `<rect class="steel-f" x="${f1(c[0]-2)}" y="${f1(c[1]-11)}" width="4" height="22" rx="1.5"/><rect class="plate" x="${f1(c[0]-9)}" y="${f1(c[1]-19)}" width="18" height="9" rx="2.2"/><rect class="plate" x="${f1(c[0]-9)}" y="${f1(c[1]+10)}" width="18" height="9" rx="2.2"/>`;
+  if(g==="handle") return circ(c,3.4,"steel-f");
+  return "";
+}
+function frontGrip(g,a,side){
+  if(!g) return "";
+  const c=a.grip;
+  if(g==="dbEnd") return hex(c,7.6)+circ(c,4.5,"plate-ring")+circ(c,2.2,"steel-f");
+  if(g==="dbSide") return lin(add(c,[-12,0]),add(c,[12,0]),"steel",3)+`<rect class="plate" x="${f1(c[0]-17)}" y="${f1(c[1]-7)}" width="7" height="14" rx="2"/><rect class="plate" x="${f1(c[0]+10)}" y="${f1(c[1]-7)}" width="7" height="14" rx="2"/>`;
+  if(g==="handle") return `<rect class="steel-f" x="${f1(c[0]-5)}" y="${f1(c[1]-2.5)}" width="10" height="5" rx="2"/>`;
+  return "";
+}
+
+/* ---------------- ТРЕНАЖЁРЫ ---------------- */
+const EQ = {
+  floor:(cx=100,w=70)=>`<line class="floor" x1="6" y1="196" x2="194" y2="196"/><ellipse class="shadow" cx="${cx}" cy="197" rx="${w}" ry="3.5"/>`,
+  tube:(a,b,w=6)=>{ const u=unit(sub(b,a)), n=[u[1]*w/2,-u[0]*w/2]; return `<path class="frame" d="M${P(add(a,n))} L${P(add(b,n))} L${P(sub(b,n))} L${P(sub(a,n))}Z"/>`; },
+  foot:(x,w=26)=>`<rect class="frame" x="${f1(x-w/2)}" y="191" width="${w}" height="5" rx="1.5"/><rect class="rubber" x="${f1(x-w/2+1)}" y="195" width="4" height="1.6"/><rect class="rubber" x="${f1(x+w/2-5)}" y="195" width="4" height="1.6"/>`,
+  pad:(a,b,th=9)=>{ const u=unit(sub(b,a)), n=[u[1]*th/2,-u[0]*th/2], r=th/2; return `<path class="pad" d="M${P(add(a,n))} L${P(add(b,n))} A${r} ${r} 0 0 1 ${P(sub(b,n))} L${P(sub(a,n))} A${r} ${r} 0 0 1 ${P(add(a,n))}Z"/>`+lin(add(add(a,mul(n,.55)),mul(u,1.5)),add(add(b,mul(n,.55)),mul(u,-1.5)),"pad-hi"); },
+  roller:(c,r=6.5)=>circ(c,r,"pad")+circ(c,r*.62,"pad-hi2")+circ(c,1.8,"steel-f"),
+  pulley:(c)=>circ(c,5.5,"frame")+circ(c,2.6,"steel-f"),
+  cable:(a,b)=>lin(a,b,"cable"),
+  stack:(x,y,w=16,n=8)=>{ let s=lin([x+2.5,26],[x+2.5,y+n*5],"rod")+lin([x+w-2.5,26],[x+w-2.5,y+n*5],"rod")+`<rect class="frame" x="${x-2}" y="${y-3}" width="${w+4}" height="3" rx="1"/><rect class="frame" x="${x-2}" y="${y+n*5}" width="${w+4}" height="3" rx="1"/>`;
+    for(let i=0;i<n;i++) s+=`<rect class="plate" x="${x}" y="${y+i*5}" width="${w}" height="4.2" rx=".8"/>`;
+    return s+`<rect class="steel-f" x="${x+w-1}" y="${y+Math.floor(n/2)*5+.5}" width="6" height="3" rx="1.2"/>`+lin([x+w/2,y-3],[x+w/2,24],"cable"); },
+  // стойка блочного тренажёра: колонна, верхняя перекладина, грузоблок, ролик
+  tower:(x,pulleyY,dir=1)=>{
+    let s=EQ.tube([x,20],[x,191],10)+EQ.foot(x,40)+EQ.tube([x-12,20],[x+12,20],7);
+    s+=EQ.stack(x-dir*12-8,146,16,8);
+    s+=EQ.tube([x,pulleyY],[x+dir*9,pulleyY],5)+EQ.pulley([x+dir*10,pulleyY]);
+    return s;
+  },
+  benchFlat:(x1,x2,y)=>EQ.tube([x1+16,y+9],[x1+16,191],6)+EQ.tube([x2-16,y+9],[x2-16,191],6)+EQ.foot(x1+16,26)+EQ.foot(x2-16,26)+EQ.tube([x1+10,y+8],[x2-10,y+8],5)+EQ.pad([x1,y+4],[x2,y+4],9),
+  seat:(x1,x2,y,post=null)=>{ const m=post??(x1+x2)/2; return EQ.tube([m,y+8],[m,191],7)+EQ.foot(m,36)+EQ.pad([x1,y+4],[x2,y+4],9); },
+  rails:(x1,x2,top=14)=>EQ.tube([x1,top],[x1,191],6)+EQ.tube([x2,top],[x2,191],6)+EQ.tube([x1-5,top],[x2+5,top],7)+EQ.foot(x1,28)+EQ.foot(x2,28),
+  label:()=>"",
+};
+
+/* ---------------- ПРОВЕРКА И СБОРКА ---------------- */
+function check(name,idx,J,spec){
+  const cr=(a,b,c)=>{const v1=sub(b,a),v2=sub(c,b);return (v1[0]*v2[1]-v1[1]*v2[0])/(len(v1)*len(v2));};
+  const bad=(x,msg)=>{ if(x) ISSUES.push(`${name} [${idx}] ${msg}`); };
+  if(!spec.noArmCheck) bad(cr(J.sh,J.el,J.wr)>0.1,"локоть выгнут назад");
+  bad(cr(J.hip,J.knee,J.ankle)<-0.1,"колено выгнуто назад");
+  bad(cr(J.fhip,J.fknee,J.fankle)<-0.1,"дальнее колено выгнуто");
+  if(!spec.noArmCheck) bad(cr(J.fsh,J.fel,J.fwr)>0.1,"дальний локоть выгнут");
+  const sole=J.ankle[1]+6*Math.abs(Math.sin(J.foot*R));
+  if(!spec.air) bad(Math.abs(sole-196)>3.5 && !spec.noFloor,"стопа не на полу: "+f1(sole));
+  for(const [k,v] of [["руки",len(sub(J.el,J.sh))/LEN.ua],["предплечья",len(sub(J.wr,J.el))/LEN.fa]]) bad(v>1.08,"длина "+k+" "+f1(v));
+}
+function frame(spec,pose,i,name){
+  const view=spec.view||"side";
+  const body= view==="side" ? drawSide(pose,spec.mus) : drawFront(pose,spec.mus);
+  if(view==="side") check(name,i,body.J,spec);
+  if(spec.scale){ const k=spec.scale, oy=spec.scaleY||0; return EQ.floor(spec.shadowX||100, spec.shadowW||60)+(spec.eqRaw?spec.eqRaw(body,i,pose):"")+`<g transform="translate(${100*(1-k)} ${oy}) scale(${k})">${spec.eq?spec.eq(body,i,pose):""}${body.svg}${spec.eqTop?spec.eqTop(body,i,pose):""}</g>`; }
+  const back = spec.eq ? spec.eq(body,i,pose) : "";
+  const top = spec.eqTop ? spec.eqTop(body,i,pose) : "";
+  return EQ.floor(spec.shadowX||100, spec.shadowW||60)+back+body.svg+top;
+}
+function render(spec,label){
+  const [a,b]=spec.frames;
+  return `<svg class="exfig" viewBox="0 0 420 206" role="img" aria-label="${label}">
+<g>${frame(spec,a,1,label)}</g>
+<g class="arrow"><path d="M201 103 h16 m-6 -6 l6 6 l-6 6"/></g>
+<g transform="translate(220 0)">${frame(spec,b,2,label)}</g>
+<g class="num"><circle cx="14" cy="14" r="10"/><text x="14" y="18.5">1</text><circle cx="234" cy="14" r="10"/><text x="234" y="18.5">2</text></g>
+</svg>`;
+}
+return {render, EQ, D, add, sub, mul, unit, len, sideJ, issues:()=>ISSUES};
+})();
+
+const EXFIG = (()=>{
+const {EQ, D, add, sub, mul, unit, len} = FIG;
+const S = {};
+const def = (names, spec) => names.forEach(n=>S[n]=spec);
+const T = (J,s,o) => add(add(J.hip,mul(J.u,50*s)),mul(J.nf,o));      // точка на корпусе
+const st = (x,o={}) => ({hip:[x,113], ankle:[x+1,190], t:0, ...o});  // стоя
+
+/* ---------- ГРУДЬ ---------- */
+const lieBench = () => EQ.benchFlat(42,152,148);
+const lie = o => ({hip:[128,134], t:-90, head:-4, ankle:[160,190], farAnkle:[151,190], ...o});
+def(["Жим лёжа 0°","Жим лёжа"],{mus:["chest","delt_front","triceps"], eq:lieBench,
+  frames:[lie({hand:[80,84],grip:"barbell"}), lie({hand:[88,121],grip:"barbell"})]});
+def(["Жим штанги в нижней части амплитуды без дожима 0°"],{mus:["chest","delt_front","triceps"], eq:lieBench,
+  frames:[lie({hand:[88,121],grip:"barbell"}), lie({hand:[84,104],grip:"barbell"})]});
+
+const incl = o => ({hip:[118,138], t:-60, head:-2, ankle:[160,190], farAnkle:[151,190], ...o});
+const inclBench = b => { const J=b.J;
+  return EQ.tube([J.hip[0]-44,188],[J.hip[0]+36,188],6)+EQ.foot(J.hip[0]-40,24)+EQ.foot(J.hip[0]+32,24)
+   + EQ.tube(T(J,.5,-22),[J.hip[0]-18,188],5) + EQ.tube([J.hip[0]+12,J.hip[1]+18],[J.hip[0]+12,188],6)
+   + EQ.pad([J.hip[0]-8,J.hip[1]+15.5],[J.hip[0]+30,J.hip[1]+15.5],9) + EQ.pad(T(J,-.02,-18),T(J,1.42,-18),9); };
+def(["Жим лёжа 30°"],{mus:["chest","delt_front","triceps"], eq:inclBench,
+  frames:[incl({hand:[77,62],grip:"barbell"}), incl({hand:[90,99],grip:"barbell"})]});
+def(["Жим гантелей лёжа 30°"],{mus:["chest","delt_front","triceps"], eq:inclBench,
+  frames:[incl({hand:[77,62],grip:"dumbbell"}), incl({hand:[86,104],grip:"dumbbell"})]});
+def(["Жим гантелей в нижней части амплитуды без дожима 30°"],{mus:["chest","delt_front","triceps"], eq:inclBench,
+  frames:[incl({hand:[86,104],grip:"dumbbell"}), incl({hand:[82,86],grip:"dumbbell"})]});
+
+const twin = (y) => b => EQ.tower(22,y,1)+EQ.tower(178,y,-1);
+const twinCables = (y) => b => EQ.cable([32,y],b.arm(-1).grip)+EQ.cable([168,y],b.arm(1).grip);
+def(["Сведения рук в блоке снизу вверх","Сведение рук в блоке снизу вверх"],{view:"front", mus:["chest","delt_front"],
+  eq:twin(184), eqTop:twinCables(184),
+  frames:[{hipY:112,arm:{el:[32,28],wr:[42,50]},grip:"handle"},{hipY:112,arm:{el:[24,14],wr:[5,5]},grip:"handle"}]});
+def(["Сведение рук в блоке сверху вниз"],{view:"front", mus:["chest","delt_front"],
+  eq:twin(30), eqTop:twinCables(30),
+  frames:[{hipY:112,arm:{el:[40,-14],wr:[60,-28]},grip:"handle"},{hipY:112,arm:{el:[24,30],wr:[7,49]},grip:"handle"}]});
+
+const fSeat = (b,x1=-30,x2=30)=>{ const cx=b.cx, y=b.hy+10; return EQ.tube([cx,y+8],[cx,191],8)+EQ.foot(cx,44)+EQ.pad([cx+x1,y+4],[cx+x2,y+4],9); };
+const fBack = (b,top)=>EQ.pad([b.cx,b.shY+8],[b.cx,b.hy+2],30);
+const seatLegs = {knee:[16,22],ankle:[18,190]};
+def(["Сведения рук в тренажёре бабочка"],{view:"front", mus:["chest","delt_front"],
+  eq:b=>{ let s=EQ.tube([b.cx-48,30],[b.cx-48,191],7)+EQ.tube([b.cx+48,30],[b.cx+48,191],7)+EQ.tube([b.cx-54,30],[b.cx+54,30],8)+EQ.foot(b.cx-48,28)+EQ.foot(b.cx+48,28)
+      +EQ.stack(b.cx+56,140,14,9)+fBack(b,b.shY-14)+fSeat(b);
+    for(const sd of [-1,1]){ const a=b.arm(sd); const pv=[b.cx+sd*30,b.shY-8]; s+=EQ.tube([b.cx+sd*30,36],pv,5)+EQ.tube(pv,add(a.grip,[0,-13]),4.5)+circ0(pv); }
+    return s; },
+  eqTop:b=>{ let s=""; for(const sd of [-1,1]){ const a=b.arm(sd); s+=`<rect class="steel-f" x="${a.grip[0]-2.2}" y="${a.grip[1]-14}" width="4.4" height="24" rx="2"/>`; } return s; },
+  frames:[{hipY:128,leg:seatLegs,arm:{el:[46,4],wr:[70,6]}}, {hipY:128,leg:seatLegs,arm:{el:[26,10],wr:[7,9]}}]});
+function circ0(c){ return `<circle class="frame" cx="${c[0]}" cy="${c[1]}" r="4.5"/><circle class="steel-f" cx="${c[0]}" cy="${c[1]}" r="1.8"/>`; }
+
+/* ---------- СПИНА ---------- */
+const sit = o => ({hip:[92,142], t:-10, head:4, ankle:[124,190], farAnkle:[116,190], ...o});
+def(["Тяга вертикального блока","Тяга верхнего блока"],{mus:["lats","biceps","delt_rear"],
+  eq:b=>{ const J=b.J; return EQ.tube([176,20],[176,191],10)+EQ.foot(176,40)+EQ.tube([96,20],[182,20],8)+EQ.pulley([98,27])+EQ.stack(150,140,16,9)
+     + EQ.cable([98,27],J.grip) + EQ.tube([J.hip[0]+2,J.hip[1]+18],[J.hip[0]+2,191],7)+EQ.foot(J.hip[0]+2,36)+EQ.tube([J.hip[0]+2,176],[176,176],5)
+     + EQ.pad([J.hip[0]-18,J.hip[1]+14.5],[J.hip[0]+22,J.hip[1]+14.5],9) + EQ.tube([J.knee[0]+2,J.knee[1]-16],[J.knee[0]+14,176],4); },
+  eqTop:b=>{ const J=b.J; return EQ.roller([J.knee[0]-3,J.knee[1]-15],6.5)+`<rect class="steel-f" x="${J.grip[0]-3}" y="${J.grip[1]-3}" width="6" height="6" rx="3"/>`; },
+  frames:[sit({hand:[95,42],grip:"handle"}), sit({hand:[101,86],grip:"handle"})]});
+def(["Пуловер на скамье","Пуловер лопатками на скамье"],{mus:["lats","chest"], eq:lieBench,
+  frames:[lie({hand:[80,86],grip:"dumbbell"}), lie({hand:[34,118],grip:"dumbbell"})]});
+
+const row = o => ({hip:[62,156], t:-4, head:0, ankle:[134,166], foot:158, farAnkle:[130,164], farFoot:158, ...o});
+const rowEq = b => { const J=b.J;
+  return EQ.tube([28,188],[176,188],6)+EQ.foot(34,26)+EQ.tower(176,150,-1)+EQ.cable([166,150],J.grip)
+   + EQ.tube([62,176],[62,188],7)+EQ.pad([30,J.hip[1]+14.5],[98,J.hip[1]+14.5],9)
+   + EQ.tube([146,160],[152,188],5)+EQ.pad([141,148],[146,180],7); };
+def(["Горизонтальная тяга широким хватом к груди","Тяга горизонтального блока широким хватом","Горизонтальная тяга широким хватом со сведёнными лопатками"],{mus:["upperback","delt_rear","lats"], eq:rowEq, noFloor:true,
+  frames:[row({t:22,hand:[130,128],grip:"handle"}), row({hand:[84,118],grip:"handle"})]});
+def(["Горизонтальная тяга узким хватом к поясу","Горизонтальная тяга","Тяга горизонтального блока"],{mus:["lats","biceps"], eq:rowEq, noFloor:true,
+  frames:[row({t:22,hand:[130,128],grip:"handle"}), row({hand:[82,137],grip:"handle"})]});
+
+const pullEq = () => EQ.tube([156,16],[156,191],8)+EQ.foot(156,40)+EQ.tube([100,24],[160,24],6)+`<circle class="frame" cx="100" cy="24" r="5"/><circle class="steel-f" cx="100" cy="24" r="2.4"/>`;
+const pull = (sh,t,o={}) => { const u=[Math.sin(t*Math.PI/180),-Math.cos(t*Math.PI/180)], hip=[sh[0]-u[0]*50, sh[1]-u[1]*50];
+  return {hip, t, head:0, ankle:[hip[0]-30,hip[1]+36], farAnkle:[hip[0]-35,hip[1]+34], foot:-38, farFoot:-38, hand:[100,28], grip:"handle", ...o}; };
+def(["Подтягивания с доп. весом / без","Подтягивания"],{mus:["lats","biceps"], air:true, noFloor:true, eq:pullEq,
+  frames:[pull([98,80],-4), pull([88,42],-14,{head:-6})]});
+def(["Тяга в наклоне"],{mus:["lats","upperback","biceps"],
+  frames:[st(92,{hip:[92,120],t:58,head:-38,ankle:[110,190],farAnkle:[100,190],hand:[133,143],grip:"barbell"}),
+          st(92,{hip:[92,120],t:58,head:-38,ankle:[110,190],farAnkle:[100,190],hand:[116,127],grip:"barbell"})]});
+def(["Шраги с гантелями"],{view:"front", mus:["traps"],
+  frames:[{hipY:112,arm:{el:[22,32],wr:[23,56]},grip:"dbEnd"},{hipY:112,shrug:6,arm:{el:[22,32],wr:[23,56]},grip:"dbEnd"}]});
+
+/* ---------- НОГИ ---------- */
+const barBack = J => T(J,.98,-9);
+const armsOnBar = {elbow:J=>add(T(J,.62,-7),[0,0]), wrist:J=>T(J,.9,-4)};
+def(["Присед"],{mus:["quads","glutes"], noArmCheck:true,
+  frames:[st(98,{t:4,ankle:[100,190],farAnkle:[92,190],...armsOnBar,grip:"barbell",gripPt:barBack}),
+          st(98,{hip:[70,150],t:45,head:-30,ankle:[100,190],farAnkle:[92,190],...armsOnBar,grip:"barbell",gripPt:barBack})]});
+const goblet = {elbow:J=>T(J,.45,9), wrist:J=>T(J,.72,15), grip:"dbv", gripPt:J=>T(J,.74,20)};
+def(["Гоблет-приседания"],{mus:["quads","glutes"],
+  frames:[st(100,{t:4,ankle:[102,190],farAnkle:[94,190],...goblet}), st(100,{hip:[86,154],t:18,head:-10,ankle:[104,190],farAnkle:[96,190],...goblet})]});
+
+const hackU = [Math.sin(-38*Math.PI/180),-Math.cos(-38*Math.PI/180)], hackN=[-hackU[1],hackU[0]];
+const hack = hip => ({hip, t:-38, head:6, ankle:[128,183], foot:78, farAnkle:[124,181], farFoot:78, elbow:J=>T(J,.62,6), wrist:J=>T(J,.95,8)});
+def(["Присед в гакке"],{mus:["quads","glutes"], noFloor:true,
+  eq:b=>{ const J=b.J, rb=[80.4,128.5], rt=add(rb,mul(hackU,72)), r0=[129,191];
+    return EQ.tube(r0,rt,7)+EQ.tube([r0[0]-16,191],[r0[0]+26,191],6)+EQ.tube(add(rb,mul(hackU,40)),[60,191],5)+EQ.foot(60,24)
+     + EQ.tube(T(J,.15,-22),T(J,.15,-30),5)+EQ.tube(T(J,.85,-22),T(J,.85,-30),5)
+     + EQ.pad(T(J,-.08,-18),T(J,1.02,-18),10)
+     + EQ.tube([112,193],[150,193],5)+EQ.pad([118,188],[154,182],6); },
+  eqTop:b=>EQ.roller(T(b.J,1.06,2),6),
+  frames:[hack([104,110]), hack([126.2,138.4])]});
+def(["Румынская тяга"],{mus:["hams","glutes"],
+  frames:[st(98,{t:2,ankle:[100,190],farAnkle:[92,190],hand:[101,115],grip:"barbell"}),
+          st(98,{hip:[72,120],t:80,head:-48,ankle:[98,190],farAnkle:[90,190],hand:[117,160],grip:"barbell"})]});
+
+const legM = (o) => ({hip:[80,140], t:-10, head:4, knee:[120,142], farKnee:[117,140], hand:[82,140], ...o});
+const legMEq = b => { const J=b.J;
+  return EQ.tube([22,26],[22,191],9)+EQ.foot(22,34)+EQ.stack(30,140,14,9)+EQ.tube([22,176],[122,176],6)+EQ.tube([100,158],[100,176],7)+EQ.foot(122,26)+EQ.tube([122,176],[122,191],6)
+   + EQ.pad([54,J.hip[1]+14],[124,J.hip[1]+14],9) + EQ.tube(T(J,.4,-23),[48,176],5) + EQ.pad(T(J,.02,-18),T(J,1.02,-18),9); };
+const lever = (J,front) => { const d=unit(sub(J.ankle,J.knee)), n=[d[1],-d[0]], rc=add(add(J.ankle,mul(n,front?8:-8)),mul(d,-4));
+  return {rc, s:EQ.tube(J.knee,rc,5)+`<circle class="frame" cx="${J.knee[0]}" cy="${J.knee[1]}" r="5"/><circle class="steel-f" cx="${J.knee[0]}" cy="${J.knee[1]}" r="2"/>`}; };
+def(["Разгибания ног в тренажёре"],{mus:["quads"], noFloor:true, eq:legMEq,
+  eqTop:b=>{ const L=lever(b.J,true); return L.s+EQ.roller(L.rc,6.5); },
+  frames:[legM({ankle:[114.7,179.6],farAnkle:[111.7,177.6],foot:80}), legM({ankle:[157.8,146],farAnkle:[154.8,144],foot:168})]});
+def(["Сгибания ног в тренажёре"],{mus:["hams"], noFloor:true, eq:legMEq,
+  eqTop:b=>{ const L=lever(b.J,false); return L.s+EQ.roller(L.rc,6.5)+EQ.roller([b.J.knee[0]-8,b.J.knee[1]-15],6); },
+  frames:[legM({ankle:[157.6,146],farAnkle:[154.6,144],foot:168}), legM({ankle:[107,177.7],farAnkle:[104,175.7],foot:70})]});
+
+const calf = (ankle,foot) => ({hip:[ankle[0],ankle[1]-78], t:0, ankle, foot, farAnkle:add(ankle,[-5,0]), elbow:J=>T(J,.66,-8), wrist:J=>T(J,.93,-4), grip:"barbell", gripPt:barBack});
+def(["Подъём на носки стоя в Смите"],{mus:["calves"], noFloor:true, noArmCheck:true,
+  eq:()=>EQ.tube([96,14],[96,191],6)+EQ.tube([88,14],[104,14],6)+EQ.foot(96,30)+`<rect class="frame" x="108" y="184" width="54" height="12" rx="2"/><rect class="rubber" x="108" y="184" width="54" height="2.5"/>`,
+  frames:[calf([101,183.4],110), calf([110.1,171.6],40)]});
+
+const addEq = (inner) => b => { let s=fBack(b,b.shY-12)+fSeat(b,-34,34)+EQ.tube([b.cx-50,188],[b.cx+50,188],6);
+  for(const sd of [-1,1]){ const g=b.leg(sd); const px=g.kn[0]+sd*(inner?-12:12); s+=EQ.tube([b.cx+sd*14,188],[px,g.kn[1]+10],4); } return s; };
+const addTop = (inner) => b => { let s=""; for(const sd of [-1,1]){ const g=b.leg(sd); const px=g.kn[0]+sd*(inner?-11:11); s+=EQ.pad([px,g.kn[1]-6],[px,g.kn[1]+8],8); } return s; };
+const addArm = {el:[26,30],wr:[30,52]};
+def(["Сведения ног в тренажёре"],{view:"front", mus:["adductors"], eq:addEq(true), eqTop:addTop(true),
+  frames:[{hipY:128,leg:{knee:[31,22],ankle:[27,190]},arm:addArm,grip:"handle"},{hipY:128,leg:{knee:[14,22],ankle:[15,190]},arm:addArm,grip:"handle"}]});
+def(["Разведения ног в тренажёре сидя"],{view:"front", mus:["abductors","glutes"], eq:addEq(false), eqTop:addTop(false),
+  frames:[{hipY:128,leg:{knee:[14,22],ankle:[15,190]},arm:addArm,grip:"handle"},{hipY:128,leg:{knee:[31,22],ankle:[27,190]},arm:addArm,grip:"handle"}]});
+
+/* ---------- ПЛЕЧИ ---------- */
+def(["Жим гантелей сидя 80°","Жим гантелей сидя 70°","Жим гантелей сидя"],{view:"front", mus:["delt_front","delt_side","triceps"],
+  eq:b=>fBack(b,b.shY-16)+fSeat(b),
+  frames:[{hipY:128,leg:seatLegs,arm:{el:[46,2],wr:[45,-22]},grip:"dbSide"},{hipY:128,leg:seatLegs,arm:{el:[34,-20],wr:[30,-46]},grip:"dbSide"}]});
+const smith = o => ({hip:[86,146], t:-6, head:2, ankle:[124,190], farAnkle:[116,190], grip:"ez", gripPt:J=>[104,J.wr[1]-2], ...o});
+def(["Жим сидя в Смите 70°","Жим сидя в Смите","Жим в Смите сидя"],{mus:["delt_front","delt_side","triceps"],
+  eq:b=>{ const J=b.J; return EQ.tube([104,12],[104,191],6)+EQ.tube([94,12],[114,12],6)+EQ.foot(104,30)
+    + EQ.tube([J.hip[0]-30,188],[J.hip[0]+30,188],6)+EQ.foot(J.hip[0]-26,24)+EQ.tube([J.hip[0]+4,J.hip[1]+18],[J.hip[0]+4,188],6)
+    + EQ.tube(T(J,.45,-22),[J.hip[0]-22,188],5)+EQ.pad([J.hip[0]-16,J.hip[1]+15.5],[J.hip[0]+22,J.hip[1]+15.5],9)+EQ.pad(T(J,-.02,-18),T(J,1.2,-18),9); },
+  eqTop:b=>`<rect class="frame" x="99" y="${b.J.wr[1]-9}" width="10" height="4" rx="1.5"/>`,
+  frames:[smith({hand:[101,94]}), smith({hand:[99,47]})]});
+def(["Подъём гантелей перед собой"],{mus:["delt_front"],
+  frames:[st(100,{hand:[104,114],grip:"dumbbell"}), st(100,{hand:[152,60],grip:"dumbbell"})]});
+def(["Обратная бабочка со сведёнными лопатками","Разведения рук в тренажёре бабочка лицом к спинке со сведёнными лопатками"],{view:"front", mus:["delt_rear","upperback"],
+  eq:b=>{ let s=EQ.tube([b.cx,26],[b.cx,191],10)+EQ.foot(b.cx,44)+EQ.tube([b.cx-16,30],[b.cx+16,30],7)+fSeat(b);
+    for(const sd of [-1,1]){ const a=b.arm(sd); s+=EQ.tube([b.cx+sd*14,32],a.grip,4)+circ0([b.cx+sd*14,32]); } return s; },
+  frames:[{hipY:128,rear:true,armsBehind:true,leg:seatLegs,arm:{el:[31,8],wr:[22,10]},grip:"handle"},{hipY:128,rear:true,leg:seatLegs,arm:{el:[46,3],wr:[70,2]},grip:"handle"}]});
+def(["Отведения гантелей","Отведения на дельты"],{view:"front", mus:["delt_side"],
+  frames:[{hipY:112,arm:{el:[23,30],wr:[26,54]},grip:"dbEnd"},{hipY:112,arm:{el:[46,3],wr:[70,8]},grip:"dbEnd"}]});
+def(["Отведения на дельты в блоке"],{view:"front", mus:["delt_side"],
+  eq:b=>EQ.tower(20,184,1),
+  eqTop:b=>EQ.cable([30,184],b.arm(1).grip),
+  frames:[{hipY:112,arm:{el:[18,31],wr:[6,52]},armL:{el:[23,30],wr:[25,54]},grip:"handle",gripOne:true},{hipY:112,arm:{el:[46,3],wr:[70,8]},armL:{el:[23,30],wr:[25,54]},grip:"handle",gripOne:true}]});
+
+/* ---------- РУКИ ---------- */
+def(["Сгибания рук с супинацией на бицепс","Сгибания рук с гантелями с супинацией"],{mus:["biceps"],
+  frames:[st(100,{elbow:[101,91],wrist:[104,115],grip:"dumbbell"}), st(100,{elbow:[102,91],wrist:[120,74],grip:"dumbbell"})]});
+def(["Сгибание рук со штангой на бицепс","Сгибания на бицепс EZ-грифом супинированным хватом"],{mus:["biceps"],
+  frames:[st(100,{elbow:[101,91],wrist:[104,115],grip:"barbell"}), st(100,{elbow:[102,91],wrist:[120,74],grip:"barbell"})]});
+def(["Сгибания рук обратным хватом с EZ-грифом","Сгибания на бицепс EZ-грифом пронированным хватом"],{mus:["forearms","biceps"],
+  frames:[st(100,{elbow:[101,91],wrist:[104,115],grip:"ez"}), st(100,{elbow:[102,91],wrist:[120,74],grip:"ez"})]});
+const inc50 = o => ({hip:[104,140], t:-40, head:-2, ankle:[150,190], farAnkle:[142,190], ...o});
+const inc50Eq = b => { const J=b.J;
+  return EQ.tube([J.hip[0]-50,188],[J.hip[0]+34,188],6)+EQ.foot(J.hip[0]-46,24)+EQ.foot(J.hip[0]+30,24)
+   + EQ.tube(T(J,.6,-22),[J.hip[0]-30,188],5)+EQ.tube([J.hip[0]+10,J.hip[1]+18],[J.hip[0]+10,188],6)
+   + EQ.pad([J.hip[0]-8,J.hip[1]+15.5],[J.hip[0]+30,J.hip[1]+15.5],9)+EQ.pad(T(J,-.02,-18),T(J,1.35,-18),9); };
+def(["Сгибания рук с гантелями на скамье 50°"],{mus:["biceps"], eq:inc50Eq,
+  frames:[inc50({elbow:[68.9,129.7],wrist:[67.5,154.5],grip:"dumbbell"}), inc50({elbow:[68.9,129.7],wrist:[86.9,112.7],grip:"dumbbell"})]});
+const preach = o => ({hip:[72,142], t:10, head:-4, ankle:[110,190], farAnkle:[102,190], elbow:[103.6,108.9], grip:"ez", ...o});
+def(["Сгибания рук на скамье Скотта"],{mus:["biceps"],
+  eq:b=>EQ.tube([72,156],[72,191],7)+EQ.foot(72,34)+EQ.pad([54,155],[92,155],9)+EQ.tube([95,120],[98,191],7)+EQ.foot(98,34)+EQ.tube([72,184],[98,184],5)+EQ.pad([79.3,105.2],[106,124],12),
+  frames:[preach({wrist:[126.3,119.5]}), preach({wrist:[107.9,84.3]})]});
+def(["Разгибания рук в блоке на трицепс","Разгибание рук на трицепс"],{mus:["triceps"],
+  eq:b=>EQ.tower(162,26,-1)+EQ.cable([152,26],b.J.grip),
+  eqTop:b=>`<rect class="steel-f" x="${b.J.grip[0]-3}" y="${b.J.grip[1]-3}" width="12" height="5" rx="2" transform="rotate(20 ${b.J.grip[0]} ${b.J.grip[1]})"/>`,
+  frames:[st(98,{t:12,ankle:[104,190],farAnkle:[94,190],elbow:[106,91],wrist:[126,77]}), st(98,{t:12,ankle:[104,190],farAnkle:[94,190],elbow:[106,91],wrist:[110,115]})]});
+const ohE = [140.2,43.7];
+def(["Французский жим из-за головы в блоке","Разгибания рук в блоке из-за головы","Французский жим из-за головы"],{mus:["triceps"],
+  eq:b=>EQ.tower(24,44,1)+EQ.cable([34,44],b.J.grip),
+  frames:[st(108,{hip:[108,114],t:30,head:-10,ankle:[126,190],farAnkle:[90,190],elbow:ohE,wrist:[124.1,62.9],grip:"handle"}),
+          st(108,{hip:[108,114],t:30,head:-10,ankle:[126,190],farAnkle:[90,190],elbow:ohE,wrist:[143.7,18.9],grip:"handle"})]});
+def(["Французский жим лёжа"],{mus:["triceps"], eq:lieBench,
+  frames:[lie({elbow:[70.8,107],wrist:[46.2,111.3],grip:"ez"}), lie({elbow:[70.8,107],wrist:[63.1,83.2],grip:"ez"})]});
+const wr = o => ({hip:[70,142], t:60, head:-50, ankle:[116,190], farAnkle:[108,190],
+  elbow:J=>add(add(J.hip,mul(unit(sub(J.knee,J.hip)),24)),[0,-11]), wrist:J=>add(add(J.knee,mul(unit(sub(J.knee,J.hip)),6)),[0,-10]), grip:"ez", ...o});
+def(["Сгибания кистей со штангой с упором на скамью"],{mus:["forearms"],
+  eq:()=>EQ.benchFlat(8,92,148), frames:[wr({handDir:12}), wr({handDir:150})]});
+def(["Разгибания кистей со штангой с упором на скамью"],{mus:["forearms"],
+  eq:()=>EQ.benchFlat(8,92,148), frames:[wr({handDir:20}), wr({handDir:140})]});
+
+return S;
+})();
+const MUSCLES = {
+  chest:["грудные","chest"], delt_front:["передние дельты","front delts"], delt_side:["средние дельты","side delts"], delt_rear:["задние дельты","rear delts"],
+  triceps:["трицепс","triceps"], biceps:["бицепс","biceps"], forearms:["предплечья","forearms"], lats:["широчайшие","lats"], upperback:["ромбовидные и середина трапеций","mid back"],
+  traps:["трапеции","traps"], quads:["квадрицепсы","quads"], hams:["бицепс бедра","hamstrings"], glutes:["ягодичные","glutes"], calves:["икры","calves"],
+  adductors:["приводящие мышцы бедра","adductors"], abductors:["отводящие мышцы бедра","abductors"],
+};
+
+const IMG = {"Пуловер в блоке":"data:image/jpeg;base64,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"};
+
+const EX_EN = {
+"Жим лёжа 0°":"Flat bench press","Жим лёжа 30°":"Incline bench press 30°","Жим лёжа":"Bench press",
+"Сведения рук в блоке снизу вверх":"Low-to-high cable fly","Сведение рук в блоке снизу вверх":"Low-to-high cable fly",
+"Сведение рук в блоке сверху вниз":"High-to-low cable fly","Тяга вертикального блока":"Lat pulldown","Тяга верхнего блока":"Lat pulldown",
+"Подъём гантелей перед собой":"Dumbbell front raise","Жим гантелей сидя 80°":"Seated dumbbell press 80°","Жим гантелей сидя 70°":"Seated dumbbell press 70°",
+"Жим гантелей сидя":"Seated dumbbell press","Жим гантелей лёжа 30°":"Incline dumbbell press 30°","Пуловер в блоке":"Cable pullover",
+"Жим штанги в нижней части амплитуды без дожима 0°":"Flat barbell press, bottom-range partials (no lockout)",
+"Жим гантелей в нижней части амплитуды без дожима 30°":"Incline dumbbell press 30°, bottom-range partials (no lockout)",
+"Жим сидя в Смите 70°":"Seated Smith machine press 70°","Жим сидя в Смите":"Seated Smith machine press","Жим в Смите сидя":"Seated Smith machine press",
+"Горизонтальная тяга широким хватом к груди":"Wide-grip cable row to the chest","Горизонтальная тяга узким хватом к поясу":"Close-grip cable row to the waist",
+"Пуловер лопатками на скамье":"Scapular pullover on a bench","Пуловер на скамье":"Bench pullover","Подтягивания с доп. весом / без":"Pull-ups (weighted or bodyweight)",
+"Тяга горизонтального блока широким хватом":"Wide-grip seated cable row","Тяга горизонтального блока":"Seated cable row","Тяга в наклоне":"Bent-over row",
+"Присед":"Squat","Румынская тяга":"Romanian deadlift","Разгибания ног в тренажёре":"Leg extension","Сгибания ног в тренажёре":"Leg curl",
+"Подъём на носки стоя в Смите":"Standing calf raise in the Smith machine","Гоблет-приседания":"Goblet squat","Присед в гакке":"Hack squat",
+"Сведения ног в тренажёре":"Hip adduction machine","Разведения ног в тренажёре сидя":"Seated hip abduction machine",
+"Обратная бабочка со сведёнными лопатками":"Reverse pec deck, shoulder blades retracted","Отведения гантелей":"Dumbbell lateral raise",
+"Горизонтальная тяга":"Seated cable row","Горизонтальная тяга широким хватом со сведёнными лопатками":"Wide-grip cable row, shoulder blades retracted",
+"Разведения рук в тренажёре бабочка лицом к спинке со сведёнными лопатками":"Reverse pec deck facing the pad, shoulder blades retracted",
+"Отведения на дельты в блоке":"Cable lateral raise","Отведения на дельты":"Lateral raise",
+"Сгибания рук с супинацией на бицепс":"Biceps curl with supination","Сгибания рук с гантелями с супинацией":"Dumbbell curl with supination",
+"Разгибания рук в блоке на трицепс":"Cable triceps pushdown","Разгибание рук на трицепс":"Triceps extension",
+"Сгибания рук с гантелями на скамье 50°":"Incline dumbbell curl 50°","Французский жим из-за головы в блоке":"Overhead cable triceps extension",
+"Французский жим из-за головы":"Overhead triceps extension","Французский жим лёжа":"Lying triceps extension (skull crusher)",
+"Сгибания рук на скамье Скотта":"Preacher curl","Разгибания рук в блоке из-за головы":"Overhead cable triceps extension",
+"Сгибания рук обратным хватом с EZ-грифом":"Reverse-grip EZ-bar curl","Сгибания кистей со штангой с упором на скамью":"Barbell wrist curl on a bench",
+"Разгибания кистей со штангой с упором на скамью":"Barbell reverse wrist curl on a bench","Сведения рук в тренажёре бабочка":"Pec deck fly",
+"Шраги с гантелями":"Dumbbell shrugs","Подтягивания":"Pull-ups",
+"Сгибания на бицепс EZ-грифом супинированным хватом":"EZ-bar curl, underhand grip","Сгибания на бицепс EZ-грифом пронированным хватом":"EZ-bar curl, overhand grip",
+"Сгибание рук со штангой на бицепс":"Barbell biceps curl",
+};
+
+const T = {
+ru:{brand:"Программа тренировок",light:"Светлая",dark:"Тёмная",history:"Мои тренировки",back:"← Назад",
+warmH:"Сначала разминка",warmLead:"5–10 минут разминки разогревают мышцы и суставы. С ними рабочие подходы идут тяжелее, а риск травмы ниже.",
+warmQ:"Сделали разминку?",yes:"Да",no:"Нет",warmT:"Общесуставная разминка",warmNote:"Выполняй сверху вниз, от шеи к ногам. Количество повторений ориентировочное.",
+wNum:"№",wEx:"Упражнение",wReps:"Повторения",warmDone:"Готово, размялся",praise:"Молодец!",praiseLead:"Тело готово к работе. Выбирай тренировку.",
+toWorkout:"К тренировке",techShow:"Показать правильность выполнения",working:"Работают:",techHide:"Скрыть технику",levelH:"Выбери уровень",lvs1:"до года в зале",lvs2:"1–3 года",lvs3:"больше 3 лет",
+groupH:"Что тренируем? Уровень: {l}",nEx:"{n} упражнений",noProg:"для этого уровня программы нет",
+progress:"Отмечай подходы по ходу тренировки: выполнено {d} из {a}",set:"Подход {n}",finish:"Закончить тренировку",saved:"Готово!",
+savedText:"Тренировка «{t}» записана. Подходов выполнено: {d} из {a}.",toHome:"На главную",histH:"По какой программе я занимался",
+histEmpty:"Пока пусто. Нажми «Закончить тренировку» в конце занятия, и программа появится здесь.",histSets:"подходов {d} из {a}",histCount:"Всего тренировок: {n}",reset:"Сбросить тренировки",resetQ:"Удалить всю историю тренировок? Это нельзя отменить.",resetYes:"Да, удалить",resetNo:"Отмена",
+authorQ:"По какой программе тренировался автор?",authorH:"Программа автора: фулбади",author:"Автор:",authorName:"Сафронов Станислав Вячеславович",
+lv_начальный:"Начальный",lv_средний:"Средний",lv_высокий:"Высокий",lvShort:"{l} уровень",
+g:{"Грудь":"Грудь","Спина":"Спина","Ноги":"Ноги","Плечи":"Плечи","Руки":"Руки","Грудь + спина":"Грудь + спина","Руки + плечи":"Руки + плечи"},
+int:{light:"лёгкая",mid:"средняя",heavy:"тяжёлая",drop:"дропсет"}},
+en:{brand:"Workout program",light:"Light",dark:"Dark",history:"My workouts",back:"← Back",
+warmH:"Warm up first",warmLead:"5–10 minutes of warm-up gets your muscles and joints ready. Your working sets get stronger and the risk of injury drops.",
+warmQ:"Have you warmed up?",yes:"Yes",no:"No",warmT:"Joint warm-up",warmNote:"Go top to bottom, from neck to legs. Rep counts are a guide.",
+wNum:"#",wEx:"Exercise",wReps:"Reps",warmDone:"Done, I'm warmed up",praise:"Well done!",praiseLead:"Your body is ready. Pick your workout.",
+toWorkout:"Go to workout",techShow:"Show correct technique",working:"Muscles:",techHide:"Hide technique",levelH:"Choose your level",lvs1:"under 1 year of training",lvs2:"1–3 years",lvs3:"over 3 years",
+groupH:"What are we training? Level: {l}",nEx:"{n} exercises",noProg:"no program for this level",
+progress:"Tick off sets as you go: {d} of {a} done",set:"Set {n}",finish:"Finish workout",saved:"Done!",
+savedText:"Workout \u201c{t}\u201d saved. Sets completed: {d} of {a}.",toHome:"Back to start",histH:"Programs I've trained with",
+histEmpty:"Nothing here yet. Tap \u201cFinish workout\u201d at the end of a session and the program will show up here.",histSets:"{d} of {a} sets",histCount:"Total workouts: {n}",reset:"Reset workouts",resetQ:"Delete your whole workout history? This can't be undone.",resetYes:"Yes, delete",resetNo:"Cancel",
+authorQ:"Which program did the author train with?",authorH:"Author's program: full body",author:"Author:",authorName:"Stanislav Vyacheslavovich Safronov",
+lv_начальный:"Beginner",lv_средний:"Intermediate",lv_высокий:"Advanced",lvShort:"{l}",
+g:{"Грудь":"Chest","Спина":"Back","Ноги":"Legs","Плечи":"Shoulders","Руки":"Arms","Грудь + спина":"Chest + back","Руки + плечи":"Arms + shoulders"},
+int:{light:"light",mid:"moderate",heavy:"heavy",drop:"drop set"}}
+};
+
+const LEVEL_COLOR = {"начальный":"var(--green)","средний":"var(--yellow)","высокий":"var(--red)"};
+const $ = id => document.getElementById(id);
+const store = {get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let lang = store.get("lang") === "en" ? "en" : "ru";
+let state = {level:null, group:null};
+
+function t(k, v={}){ let s = T[lang][k] ?? k; for(const x in v) s = s.replace("{"+x+"}", v[x]); return s; }
+const exName = n => lang==="en" ? (EX_EN[n]||n) : n;
+const lvName = l => t("lv_"+l);
+const gName = g => T[lang].g[g] || g;
+const workTitle = (g,l) => `${gName(g)}, ${lang==="ru" ? lvName(l).toLowerCase()+" уровень" : lvName(l).toLowerCase()}`;
+
+function show(name){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  $("s-"+name).classList.add("on");
+  window.scrollTo(0,0);
+}
+document.addEventListener("click", e=>{ const g = e.target.closest("[data-go]"); if(g) show(g.dataset.go); });
+$("home").onclick = ()=>show("warm");
+
+/* theme */
+function applyTheme(th){
+  if(!th) th = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", th);
+  document.querySelectorAll("[data-theme-set]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.themeSet===th));
+}
+document.querySelectorAll("[data-theme-set]").forEach(b=>b.onclick=()=>{ store.set("theme", b.dataset.themeSet); applyTheme(b.dataset.themeSet); });
+applyTheme(store.get("theme"));
+
+/* language */
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.title = t("brand");
+  document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll("[data-lang]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.lang===lang));
+  $("themeSeg").setAttribute("aria-label", lang==="ru" ? "Тема" : "Theme");
+  renderWarm(); renderAuthor(); renderHist();
+  if(state.level) renderGroups();
+  if(state.group) renderWorkout(true);
+}
+document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>{ lang = b.dataset.lang; store.set("lang", lang); applyLang(); });
+
+function fmt(sr){ return sr.replace("х"," × ").replace(/-/g,"–").replace(/;/g," / "); }
+function intCls(i){ i=i.replace("ё","е"); return i.startsWith("лег")?"light":i.startsWith("сред")?"mid":i.startsWith("тяж")?"heavy":"drop"; }
+function parseSets(sr){ const m = sr.match(/^(\d+)(?:-(\d+))?/); return m ? +(m[2]||m[1]) : 3; }
+
+/* warmup */
+function renderWarm(){
+  $("warmBox").innerHTML = '<div class="tbl-wrap"><table><thead><tr>' +
+    `<th>${t("wNum")}</th><th>${t("wEx")}</th><th>${t("wReps")}</th></tr></thead><tbody>` +
+    WARMUP.map((w,i)=>{
+      const [name, cue] = w[lang];
+      const warn = cue.startsWith("!");
+      const reps = w.reps.includes("|") ? w.reps.split("|")[lang==="ru"?0:1] : w.reps;
+      return `<tr><td class="num">${i+1}</td><td>${name}<span class="${warn?"warn":"cue"}">${warn?cue.slice(1):cue}</span></td><td>${reps}</td></tr>`;
+    }).join("") + '</tbody></table></div>';
+}
+
+/* level -> groups */
+function renderGroups(){
+  $("groupTitle").textContent = t("groupH",{l:lvName(state.level).toLowerCase()});
+  $("groups").innerHTML = Object.keys(SPLIT).map(g=>{
+    const p = SPLIT[g][state.level];
+    return p ? `<button class="group" data-group="${g}"><b>${gName(g)}</b><span>${t("nEx",{n:p.length})}</span></button>`
+             : `<button class="group" disabled><b>${gName(g)}</b><span>${t("noProg")}</span></button>`;
+  }).join("");
+  $("groups").querySelectorAll("[data-group]").forEach(x=>x.onclick=()=>{ state.group = x.dataset.group; renderWorkout(false); show("work"); });
+}
+document.querySelectorAll("[data-level]").forEach(b=>b.onclick=()=>{ state.level = b.dataset.level; state.group = null; renderGroups(); show("group"); });
+
+/* workout */
+function renderWorkout(keep){
+  const done = keep ? [...$("exList").querySelectorAll(".set")].map(s=>s.classList.contains("done")) : [];
+  const plan = SPLIT[state.group][state.level];
+  $("workTitle").innerHTML = `${gName(state.group)} <span class="tag-level" style="background:${LEVEL_COLOR[state.level]};vertical-align:middle">${lvName(state.level)}</span>`;
+  let idx = 0;
+  $("exList").innerHTML = plan.map(([n,i,sr],k)=>{
+    const circles = Array.from({length:parseSets(sr)},(_,j)=>`<button class="set${done[idx++]?" done":""}" data-ex="${k}" aria-label="${t("set",{n:j+1})}">${j+1}</button>`).join("");
+    return `<li id="ex${k}"><span class="nm">${exName(n)}</span><span class="sr">${fmt(sr)}</span>
+      <div class="meta"><span class="int ${intCls(i)}">${T[lang].int[intCls(i)]}</span><div class="sets">${circles}</div></div>
+      <button class="tech-btn" data-tech="${k}" aria-expanded="false">${t("techShow")}</button>
+      <div class="tech" id="tech${k}" hidden><ul>${(TECH[n]?TECH[n][lang]:[]).map(c=>`<li>${c}</li>`).join("")}</ul><div class="fig-box" data-name="${n}"></div>${EXFIG[n]?`<p class="mus-chips"><span>${t("working")}</span>${EXFIG[n].mus.map(m=>`<i>${MUSCLES[m][lang==="ru"?0:1]}</i>`).join("")}</p>`:""}</div></li>`;
+  }).join("");
+  $("exList").querySelectorAll(".set").forEach(b=>b.onclick=()=>{ b.classList.toggle("done"); markLi($("ex"+b.dataset.ex)); updProg(); });
+  $("exList").querySelectorAll(".ex > li").forEach(markLi);
+  $("exList").querySelectorAll(".tech-btn").forEach(b=>b.onclick=()=>{
+    const p = $("tech"+b.dataset.tech), open = p.hidden;
+    const box = p.querySelector(".fig-box");
+    if(open && box && !box.innerHTML){ const n=box.dataset.name;
+      box.innerHTML = IMG[n] ? `<img src="${IMG[n]}" alt="${exName(n)}">` : (EXFIG[n] ? FIG.render(EXFIG[n], exName(n)) : ""); }
+    p.hidden = !open; b.setAttribute("aria-expanded", open);
+    b.textContent = t(open ? "techHide" : "techShow");
+  });
+  updProg();
+}
+function markLi(li){ li.classList.toggle("done-li", li.querySelectorAll(".set").length === li.querySelectorAll(".set.done").length); }
+function counts(){ return {a:$("exList").querySelectorAll(".set").length, d:$("exList").querySelectorAll(".set.done").length}; }
+function updProg(){ $("progress").textContent = t("progress", counts()); }
+
+/* history: локально (localStorage) + в аккаунте (db), если доступно */
+const HKEY = "workout-history";
+let hist = (()=>{ try{ return JSON.parse(store.get(HKEY)) || []; }catch(e){ return []; } })();
+let cloud = null, clearedAt = null; // cloud = db doc ref
+function saveLocal(){ store.set(HKEY, JSON.stringify(hist)); }
+async function saveCloud(){ if(!cloud) return; try{ await cloud.set({items: hist, clearedAt}); }catch(e){} }
+function mergeHist(a, b){
+  const m = new Map(); [...a, ...b].forEach(x=>m.set(x.date, x));
+  return [...m.values()].sort((x,y)=> y.date.localeCompare(x.date)).slice(0,200);
+}
+(async ()=>{
+  if(!window.claude || !window.claude.use) return;
+  try{
+    const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+    if(!db || !user) return;
+    const uid = await user.id(); if(!uid) return;
+    const ref = db.doc("data/users/" + uid + "/workouts");
+    const snap = await ref.get();
+    const remote = snap.exists ? (snap.data().items || []) : [];
+    clearedAt = (snap.exists && snap.data().clearedAt) || null;
+    const local = clearedAt ? hist.filter(x=> x.date > clearedAt) : hist;
+    hist = mergeHist(remote, local);
+    cloud = ref;
+    saveLocal(); renderHist();
+    if(JSON.stringify(hist) !== JSON.stringify(remote)) await saveCloud();
+  }catch(e){}
+})();
+
+$("finish").onclick = async ()=>{
+  const {a,d} = counts();
+  hist.unshift({group:state.group, level:state.level, date:new Date().toISOString(), done:d, all:a});
+  hist = hist.slice(0,200);
+  saveLocal(); renderHist();
+  $("savedText").textContent = t("savedText",{t:workTitle(state.group,state.level), d, a});
+  show("saved");
+  await saveCloud();
+};
+function renderHist(){
+  const loc = lang==="ru" ? "ru-RU" : "en-GB";
+  $("histList").innerHTML = hist.length ? hist.map(x=>{
+    const dt = new Date(x.date);
+    const title = x.group ? workTitle(x.group, x.level) : x.title;
+    return `<li><b>${title}</b><span>${dt.toLocaleDateString(loc,{day:"numeric",month:"long",year:"numeric"})}, ${dt.toLocaleTimeString(loc,{hour:"2-digit",minute:"2-digit"})}, ${t("histSets",{d:x.done,a:x.all})}</span></li>`;
+  }).join("") : `<li><span>${t("histEmpty")}</span></li>`;
+  $("histCount").textContent = hist.length ? t("histCount",{n:hist.length}) : "";
+  $("resetBox").hidden = !hist.length;
+  resetStep(false);
+}
+function resetStep(ask){
+  $("resetBtn").hidden = ask; $("resetAsk").hidden = !ask;
+}
+$("resetBtn").onclick = ()=>resetStep(true);
+$("resetNo").onclick = ()=>resetStep(false);
+$("resetYes").onclick = async ()=>{
+  hist = []; clearedAt = new Date().toISOString(); saveLocal(); renderHist();
+  await saveCloud();
+};
+function openHist(){ renderHist(); $("drawer").classList.add("open"); $("shade").classList.add("open"); $("histClose").focus(); }
+function closeHist(){ $("drawer").classList.remove("open"); $("shade").classList.remove("open"); }
+$("histOpen").onclick = openHist; $("histOpen2").onclick = openHist;
+$("histClose").onclick = closeHist; $("shade").onclick = closeHist;
+
+/* author program */
+function renderAuthor(){ $("authorList").innerHTML = AUTHOR.map(([n,sr])=>`<li>${exName(n)} <span>${fmt(sr)}</span></li>`).join(""); }
+function toggleAuthor(open){ $("authorPop").hidden = !open; $("authorBtn").setAttribute("aria-expanded", open); }
+$("authorBtn").onclick = e=>{ e.stopPropagation(); toggleAuthor($("authorPop").hidden); };
+document.addEventListener("click", e=>{ if(!e.target.closest(".author")) toggleAuthor(false); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeHist(); toggleAuthor(false); } });
+
+applyLang();
+</script>
+</body>
+</html>
